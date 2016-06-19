@@ -44,7 +44,7 @@ func Parse(stringList string) (dir []string, pkag []string, err error) {
 
 	//Trim return character
 	rootPath := strings.TrimSpace(string(tmpRootPath))
-	err = os.Chdir(string(rootPath))
+	err = os.Chdir(rootPath)
 	if err != nil {
 		return dir, pkag, err
 	}
@@ -128,11 +128,11 @@ func readListOfPackages() (pkag []string, err error) {
 	count = 0
 	line2, errEOF := r2.ReadString(10) // line defined once
 	//Trim return character
-	aLine := strings.TrimSpace(string(line2))
+	aLine := strings.TrimSpace(line2)
 	for errEOF != io.EOF {
 		packagesList[count] = aLine
 		aLine, errEOF = r2.ReadString(10) //  line was defined before
-		aLine = strings.TrimSpace(string(aLine))
+		aLine = strings.TrimSpace(aLine)
 		count++
 	}
 	//fmt.Println(packagesList)
