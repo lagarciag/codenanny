@@ -1,0 +1,13 @@
+-   repo: https://github.com/lagarciag/pre-commit-golang.git
+    sha: bea7bcc3cdcb66560359af0fddbe73dccf8ac78a
+    stages:
+    - commit
+    hooks:
+    -   id: go-fmt
+    -   id: go-lint
+    -   id: go-vet 
+    -   id: py-yapf
+    -   id: go-check-tests
+    -   id: go-check-code
+#    -   id: c-uncrustify
+
