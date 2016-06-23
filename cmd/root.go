@@ -24,6 +24,9 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/gocomlinter/lint"
+	"github.com/lagarciag/gocomlinter/parser"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -50,10 +53,32 @@ to quickly create a Cobra application.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		os.Exit(-1)
 	}
-	fmt.Println(list)
+
+	log.Info("Processing files:", list)
+
+	dirList, pkag, err := parser.Parse(list)
+
+	log.Info("Packages:", pkag)
+
+	if err != nil {
+		log.Error(err)
+	}
+
+	err = lint.LintPackages(pkag)
+
+	if err != nil {
+		log.Error("Lint packages failed")
+	}
+
+	err = lint.LintDirs(dirList)
+
+	if err != nil {
+		log.Error("Lint dirs failed")
+	}
+
 }
 
 func init() {

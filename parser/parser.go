@@ -30,6 +30,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 //Parse parses the provided list of modified files
@@ -59,11 +61,20 @@ func Parse(stringList string) (dir []string, pkag []string, err error) {
 func getUniquePkgs(dirList []string) (pkgList []string, err error) {
 	pkgHash := make(map[string]bool)
 	rawPkagList, err := readListOfPackages()
+	fuulRootPackage := rawPkagList[0]
+	r, err := regexp.Compile(`\w+$`)
+	rootPackage := r.FindString(fuulRootPackage)
+	log.Info("ROOT RAW:", fuulRootPackage)
+	log.Info("ROOT PKG:", rootPackage)
 
 	for _, key := range dirList {
+		log.Info("Checking key:", key)
+		fullKey := rootPackage + "/" + key
 		for _, aPackage := range rawPkagList {
-			match, _ := regexp.MatchString(fmt.Sprintf("%s$", aPackage), key)
+			log.Info("p:", aPackage, " ", fullKey)
+			match, _ := regexp.MatchString(fmt.Sprintf("%s(/.)?$", fullKey), aPackage)
 			if match {
+				log.Info("MATCH:", aPackage)
 				pkgHash[aPackage] = true
 			}
 		}
