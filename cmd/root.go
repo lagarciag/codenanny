@@ -25,25 +25,19 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/lagarciag/gocomlinter/lint"
-	"github.com/lagarciag/gocomlinter/parser"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
-var list string
+var verbose bool
 
 //RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "gocomlinter",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "runs multiple linters",
+	Long:  `Runs multiple linters`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -56,29 +50,10 @@ func Execute() {
 		log.Error(err)
 		os.Exit(-1)
 	}
-
-	log.Info("Processing files:", list)
-
-	dirList, pkag, err := parser.Parse(list)
-
-	log.Info("Packages:", pkag)
-
-	if err != nil {
-		log.Error(err)
+	if verbose {
+		log.SetLevel(log.DebugLevel)
+		log.Debug("verbose mode enabled")
 	}
-
-	err = lint.LintPackages(pkag)
-
-	if err != nil {
-		log.Error("Lint packages failed")
-	}
-
-	err = lint.LintDirs(dirList)
-
-	if err != nil {
-		log.Error("Lint dirs failed")
-	}
-
 }
 
 func init() {
@@ -90,11 +65,12 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gocomlinter.yaml)")
 
-	RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
+	//RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose mode")
 }
 
 // initConfig reads in config file and ENV variables if set.

@@ -64,17 +64,18 @@ func getUniquePkgs(dirList []string) (pkgList []string, err error) {
 	fuulRootPackage := rawPkagList[0]
 	r, err := regexp.Compile(`\w+$`)
 	rootPackage := r.FindString(fuulRootPackage)
-	log.Info("ROOT RAW:", fuulRootPackage)
-	log.Info("ROOT PKG:", rootPackage)
 
 	for _, key := range dirList {
-		log.Info("Checking key:", key)
-		fullKey := rootPackage + "/" + key
+		var fullKey string
+		if key == "." {
+			fullKey = rootPackage
+		} else {
+			fullKey = rootPackage + "/" + key
+		}
 		for _, aPackage := range rawPkagList {
-			log.Info("p:", aPackage, " ", fullKey)
 			match, _ := regexp.MatchString(fmt.Sprintf("%s(/.)?$", fullKey), aPackage)
 			if match {
-				log.Info("MATCH:", aPackage)
+				log.Debug("MATCH:", aPackage)
 				pkgHash[aPackage] = true
 			}
 		}
@@ -117,7 +118,7 @@ func readListOfPackages() (pkag []string, err error) {
 	golistCmd := exec.Command("go", "list", "./...")
 	tmpGoList, err := golistCmd.Output()
 	if err != nil {
-		fmt.Println("Parser failed in go list")
+		log.Error("Parser failed in go list")
 		return pkag, err
 	}
 	//fmt.Println(string(tmpGoList))

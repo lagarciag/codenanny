@@ -78,11 +78,13 @@ func LintPackages(listOfPackages []string) (err error) {
 	}
 
 	for _, aPackage := range listOfPackages {
-		log.Info("Checking:", aPackage)
+		log.Debug("Checking package:", aPackage)
 		for _, linter := range packageLinters {
-			log.Info("Running checker:", linter)
+			log.Debug("Running package checker:", linter)
 			cmdString := lintersFlag[linter]
 			splitCmd := strings.Split(cmdString, " ")
+			msg := fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aPackage)
+			log.Debug(msg)
 			cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
 			out, err := cmd.CombinedOutput()
 			if err != nil {
@@ -105,10 +107,6 @@ func LintDirs(listOfDirs []string) (err error) {
 		return err
 	}
 
-	if false {
-		fmt.Print("deadcode")
-	}
-
 	//Trim return character
 	rootPath := strings.TrimSpace(string(tmpRootPath))
 	err = os.Chdir(rootPath)
@@ -116,17 +114,18 @@ func LintDirs(listOfDirs []string) (err error) {
 		return err
 	}
 
-	for _, aPackage := range listOfDirs {
-		log.Info("Checking:", aPackage)
+	for _, aDir := range listOfDirs {
+		log.Debug("Checking dir:", aDir)
 		for _, linter := range dirLinters {
-			log.Info("Running checker:", linter)
+			log.Debug("Running dir checker:", linter)
 			cmdString := lintersFlag[linter]
 			splitCmd := strings.Split(cmdString, " ")
-			log.Info(splitCmd[0], splitCmd[1], aPackage)
-			cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
+			msg := fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
+			log.Debug(msg)
+			cmd := exec.Command(splitCmd[0], splitCmd[1], aDir)
 			out, err := cmd.CombinedOutput()
 			if err != nil {
-				log.Info("args:", cmd.Args)
+				log.Debug("args:", cmd.Args)
 				err = fmt.Errorf("%s found error in:%s", linter, string(out))
 				log.Error(err)
 				return err
