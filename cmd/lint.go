@@ -63,7 +63,7 @@ func doLint() {
 	err = lint.LintPackages(pkag)
 
 	if err != nil {
-		log.Error("Lint packages failed")
+		log.Error("Lint packages failed:", err)
 	}
 
 	err = lint.LintDirs(dirList)

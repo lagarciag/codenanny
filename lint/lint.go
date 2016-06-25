@@ -38,7 +38,7 @@ var lintersFlag = map[string]string{
 	"gocyclo":     `gocyclo -over {mincyclo} .:^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>[^:]+):(?P<line>\d+):(\d+)$`,
 	"gofmt":       `gofmt -l -s ./*.go:^(?P<path>[^\n]+)$`,
 	"goimports":   `goimports -w `,
-	"golint":      "golint -min_confidence {min_confidence} .:PATH:LINE:COL:MESSAGE",
+	"golint":      "golint -set_exit_status ",
 	"gotype":      "gotype -e {tests=-a} .:PATH:LINE:COL:MESSAGE",
 	"ineffassign": `ineffassign -n .:PATH:LINE:COL:MESSAGE`,
 	"interfacer":  `interfacer ./:PATH:LINE:COL:MESSAGE`,
@@ -57,6 +57,7 @@ var lintersFlag = map[string]string{
 
 var packageLinters = []string{
 	"errcheck",
+	"golint",
 }
 var dirLinters = []string{
 	"goimports",
@@ -64,6 +65,9 @@ var dirLinters = []string{
 
 func LintPackages(listOfPackages []string) (err error) {
 	//Find out what the Root Path is
+	var tmpErr error
+	var errCount int = 0
+
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	tmpRootPath, err := cmd.Output()
 	if err != nil {
@@ -88,15 +92,17 @@ func LintPackages(listOfPackages []string) (err error) {
 			cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
 			out, err := cmd.CombinedOutput()
 			if err != nil {
-				err = fmt.Errorf("%s found error in:%s", linter, string(out))
-				log.Error(err)
-				return err
+				errCount++
+				tmpErr = fmt.Errorf("%s found error in:\n%s", linter, string(out))
+				log.Error(tmpErr)
 			}
 		}
 
 	}
-
-	return nil
+	if tmpErr != nil {
+		err = fmt.Errorf("Founf %d package linter errors", errCount)
+	}
+	return err
 }
 
 func LintDirs(listOfDirs []string) (err error) {
