@@ -15,12 +15,10 @@
  * under the License.
  */
 
-//Package lints implements linting methods
+//Package lint implements linting methods
 package lint
 
 import (
-	//"fmt"
-
 	"fmt"
 	"os"
 	"os/exec"
@@ -34,10 +32,10 @@ var lintersFlag = map[string]string{
 	"deadcode":    `deadcode  `,
 	"dupl":        `dupl -plumbing -threshold {duplthreshold} ./*.go:^(?P<path>[^\s][^:]+?\.go):(?P<line>\d+)-\d+:\s*(?P<message>.*)$`,
 	"errcheck":    `errcheck -abspath`,
-	"goconst":     `goconst -min-occurrences {min_occurrences} .:PATH:LINE:COL:MESSAGE`,
+	"goconst":     `goconst`,
 	"gocyclo":     `gocyclo -over {mincyclo} .:^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>[^:]+):(?P<line>\d+):(\d+)$`,
 	"gofmt":       `gofmt -l -s ./*.go:^(?P<path>[^\n]+)$`,
-	"goimports":   `goimports -w `,
+	"goimports":   `goimports -w`,
 	"golint":      "golint -set_exit_status ",
 	"gotype":      "gotype -e {tests=-a} .:PATH:LINE:COL:MESSAGE",
 	"ineffassign": `ineffassign -n .:PATH:LINE:COL:MESSAGE`,
@@ -47,10 +45,10 @@ var lintersFlag = map[string]string{
 	"test":        `go test:^--- FAIL: .*$\s+(?P<path>[^:]+):(?P<line>\d+): (?P<message>.*)$`,
 	"testify":     `go test:Location:\s+(?P<path>[^:]+):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)`,
 	"varcheck":    `varcheck .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$`,
-	"vet":         "go tool vet ./*.go:PATH:LINE:MESSAGE",
+	"vet":         "go vet ",
 	"vetshadow":   "go tool vet --shadow ./*.go:PATH:LINE:MESSAGE",
 	"unconvert":   "unconvert .:PATH:LINE:COL:MESSAGE",
-	"gosimple":    "gosimple .:PATH:LINE:COL:MESSAGE",
+	"gosimple":    "gosimple ",
 	"staticcheck": "staticcheck .:PATH:LINE:COL:MESSAGE",
 	"misspell":    "misspell ./*.go:PATH:LINE:COL:MESSAGE",
 }
@@ -58,9 +56,12 @@ var lintersFlag = map[string]string{
 var packageLinters = []string{
 	"errcheck",
 	"golint",
+	"vet",
+	"gosimple",
 }
 var dirLinters = []string{
 	"goimports",
+	"goconst",
 }
 
 func LintPackages(listOfPackages []string) (err error) {
@@ -126,9 +127,24 @@ func LintDirs(listOfDirs []string) (err error) {
 			log.Debug("Running dir checker:", linter)
 			cmdString := lintersFlag[linter]
 			splitCmd := strings.Split(cmdString, " ")
-			msg := fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
-			log.Debug(msg)
-			cmd := exec.Command(splitCmd[0], splitCmd[1], aDir)
+			var msg string
+			var cmd *exec.Cmd
+			if len(splitCmd) == 2 {
+				msg = fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
+				log.Debug(msg)
+				cmd = exec.Command(splitCmd[0], splitCmd[1], aDir)
+			} else if len(splitCmd) == 1 {
+				msg = fmt.Sprintf("CMD: %s %s ", splitCmd[0], aDir)
+				log.Debug(msg)
+				cmd = exec.Command(splitCmd[0], aDir)
+			} else {
+				log.Error("CMD:", splitCmd[0])
+				//log.Error("CMD:", splitCmd[1])
+				//log.Error("CMD:", splitCmd[2])
+				log.Error("LENTH:", len(splitCmd))
+				log.Fatal("Handle this error")
+			}
+
 			out, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Debug("args:", cmd.Args)
