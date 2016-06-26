@@ -8,3 +8,4 @@ It was inspired in codemetalinter
 [![CircleCI status](https://circleci.com/gh/lagarciag/codenanny.png?circle-token=:circle-token "CircleCI status")](https://circleci.com/gh/lagarciag/codenanny)
 
 
+
