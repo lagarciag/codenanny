@@ -60,8 +60,9 @@ func CheckExternalDependencies()(err error) {
 			cmd := exec.Command("go", "get", packageToGet,)
 			getOut, err := cmd.Output()
 			if err != nil {
-				log.Error(err)
-				return err
+				nErr := fmt.Errorf("Installation of %s did not work, returned:%s",packageToGet,err.Error())
+				log.Error(nErr)
+				return nErr
 			}
 
 			if _, err := exec.LookPath(key); err != nil {
