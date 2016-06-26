@@ -19,9 +19,11 @@ func TestMain(t *testing.M) {
 
 }
 
-func TestParserBasic(t *testing.T) {
+func TestLintBasic(t *testing.T) {
 	//gopath := os.Getenv("GOPATH")
-	installer.CheckExternalDependencies()
+	if err := installer.CheckExternalDependencies(); err != nil {
+		t.Error(err)
+	}
 	var1 := "parser/parser.go"
 	var2 := "parser/parser_test.go"
 	var3 := "cmd/root.go"

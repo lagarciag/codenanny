@@ -32,7 +32,7 @@ func TestMain(t *testing.M) {
 
 }
 
-func TestParserBasic(t *testing.T) {
+func TestInstallerBasic(t *testing.T) {
 
 	if err := installer.CheckExternalDependencies(); err != nil {
 		t.Error("Could not install package:",err)
