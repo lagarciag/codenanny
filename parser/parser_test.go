@@ -6,7 +6,7 @@ import (
 
 	"fmt"
 
-	"github.com/lagarciag/gocomlinter/parser"
+	"github.com/lagarciag/codenanny/parser"
 )
 
 func TestMain(t *testing.M) {
@@ -16,10 +16,10 @@ func TestMain(t *testing.M) {
 }
 
 func TestParserBasic(t *testing.T) {
-	gopath := os.Getenv("GOPATH")
-	var1 := gopath + "src/github.com/lagarciag/gocomlinter/parser/parser.go"
-	var2 := gopath + "src/github.com/lagarciag/gocomlinter/parser/parser_test.go"
-	var3 := gopath + "src/github.com/lagarciag/gocomlinter/cmd/root.go"
+	//gopath := os.Getenv("GOPATH")
+	var1 := "parser/parser.go"
+	var2 := "parser/parser_test.go"
+	var3 := "cmd/root.go"
 
 	dirList, pkag, err := parser.Parse(fmt.Sprintf("%s %s %s", var1, var2, var3))
 

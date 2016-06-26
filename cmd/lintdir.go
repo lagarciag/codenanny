@@ -21,71 +21,76 @@
 package cmd
 
 import (
+	llist "container/list"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+
 	log "github.com/Sirupsen/logrus"
-	"github.com/lagarciag/codenanny/lint"
-	"github.com/lagarciag/codenanny/parser"
 	"github.com/spf13/cobra"
 )
 
-var list string
+var dirList *llist.List
 
-// lintCmd represents the lint command
-var lintCmd = &cobra.Command{
-	Use:   "lint",
-	Short: "Run the linters",
-	Long:  `Runs the linters`,
+// lintdirCmd represents the lintdir command
+var lintdirCmd = &cobra.Command{
+	Use:   "lintdir",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		if list == "" {
-			log.Fatal("--list flag must be set and point to a list of files that need to be linted")
-		}
+		fmt.Println("lintdir called")
 		if verbose {
 			log.SetLevel(log.DebugLevel)
 			log.Debug("verbose mode enabled")
 		}
-		doLint()
+
+		if err := lintdir(); err != nil {
+			log.Fatal("Could not read dir")
+		}
+
 	},
 }
 
-func doLint() {
-
-	log.Debug("List:", len(list))
-	log.Debug("Processing files:", list)
-
-	dirList, pkag, err := parser.Parse(list)
-
-	log.Debug("Packages:", pkag)
-
+func lintdir() (err error) {
+	dirList = llist.New()
+	err = filepath.Walk("./", visit)
 	if err != nil {
-		log.Error(err)
+		return err
 	}
+	log.Debug("Elements:", dirList.Len())
 
-	err = lint.LintPackages(pkag)
-
-	if err != nil {
-		log.Error("Lint packages failed:", err)
+	for e := dirList.Front(); e != nil; e = e.Next() {
+		log.Debug("File:", e.Value)
 	}
+	return err
+}
 
-	err = lint.LintDirs(dirList)
-
-	if err != nil {
-		log.Error("Lint dirs failed")
+func visit(path string, f os.FileInfo, err error) error {
+	match, _ := regexp.MatchString((".go$"), path)
+	if match {
+		dirList.PushBack(path)
 	}
-
+	return nil
 }
 
 func init() {
-	RootCmd.AddCommand(lintCmd)
+	RootCmd.AddCommand(lintdirCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// lintCmd.PersistentFlags().String("foo", "", "A help for foo")
-	RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
+	// lintdirCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// lintCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// lintdirCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 }

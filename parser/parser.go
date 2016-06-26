@@ -52,7 +52,6 @@ func Parse(stringList string) (dir []string, pkag []string, err error) {
 	}
 
 	dir, err = getUniqueDirs(stringList)
-
 	pkag, err = getUniquePkgs(dir)
 
 	return dir, pkag, err
@@ -64,7 +63,6 @@ func getUniquePkgs(dirList []string) (pkgList []string, err error) {
 	fuulRootPackage := rawPkagList[0]
 	r, err := regexp.Compile(`\w+$`)
 	rootPackage := r.FindString(fuulRootPackage)
-
 	for _, key := range dirList {
 		var fullKey string
 		if key == "." {
@@ -75,7 +73,6 @@ func getUniquePkgs(dirList []string) (pkgList []string, err error) {
 		for _, aPackage := range rawPkagList {
 			match, _ := regexp.MatchString(fmt.Sprintf("%s(/.)?$", fullKey), aPackage)
 			if match {
-				log.Debug("MATCH:", aPackage)
 				pkgHash[aPackage] = true
 			}
 		}
@@ -94,7 +91,7 @@ func getUniquePkgs(dirList []string) (pkgList []string, err error) {
 func getUniqueDirs(stringList string) (dir []string, err error) {
 	dirsHash := make(map[string]bool)
 	splitString := strings.Split(stringList, " ")
-
+	log.Debug("Stringlist:", splitString)
 	for _, file := range splitString {
 		path := filepath.Dir(file)
 		dirsHash[path] = true

@@ -1,27 +1,29 @@
 package lint_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
-	"fmt"
+	log "github.com/Sirupsen/logrus"
 
-	"github.com/lagarciag/gocomlinter/lint"
-	"github.com/lagarciag/gocomlinter/parser"
+	"github.com/lagarciag/codenanny/lint"
+	"github.com/lagarciag/codenanny/parser"
 )
 
 func TestMain(t *testing.M) {
+	log.SetLevel(log.DebugLevel)
 	v := t.Run()
 	os.Exit(v)
 
 }
 
 func TestParserBasic(t *testing.T) {
-	gopath := os.Getenv("GOPATH")
-	var1 := gopath + "/src/github.com/lagarciag/gocomlinter/parser/parser.go"
-	var2 := gopath + "/src/github.com/lagarciag/gocomlinter/parser/parser_test.go"
-	var3 := gopath + "/src/github.com/lagarciag/gocomlinter/cmd/root.go"
-	var4 := gopath + "/src/github.com/lagarciag/gocomlinter/lint/lint.go"
+	//gopath := os.Getenv("GOPATH")
+	var1 := "parser/parser.go"
+	var2 := "parser/parser_test.go"
+	var3 := "cmd/root.go"
+	var4 := "lint/lint.go"
 
 	dirList, pkag, err := parser.Parse(fmt.Sprintf("%s %s %s %s", var1, var2, var3, var4))
 
@@ -52,8 +54,6 @@ func TestParserBasic(t *testing.T) {
 	if err != nil {
 		t.Error("Lint dirs failed")
 	}
-
-	t.Log("Pass")
 
 }
 

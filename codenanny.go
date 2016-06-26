@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/lagarciag/gocomlinter/cmd"
+import "github.com/lagarciag/codenanny/cmd"
 
 func main() {
 	cmd.Execute()

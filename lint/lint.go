@@ -68,7 +68,7 @@ func LintPackages(listOfPackages []string) (err error) {
 	//Find out what the Root Path is
 	var tmpErr error
 	var errCount int = 0
-
+	log.Debug("Checking pakages...", listOfPackages)
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	tmpRootPath, err := cmd.Output()
 	if err != nil {
@@ -81,7 +81,7 @@ func LintPackages(listOfPackages []string) (err error) {
 	if err != nil {
 		return err
 	}
-
+	log.Debug("Root path is:", rootPath)
 	for _, aPackage := range listOfPackages {
 		log.Debug("Checking package:", aPackage)
 		for _, linter := range packageLinters {

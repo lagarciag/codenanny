@@ -35,7 +35,7 @@ var verbose bool
 
 //RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "gocomlinter",
+	Use:   "codenanny",
 	Short: "runs multiple linters",
 	Long:  `Runs multiple linters`,
 	// Uncomment the following line if your bare application
@@ -63,7 +63,7 @@ func init() {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gocomlinter.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.codenanny.yaml)")
 
 	//RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
 
@@ -79,9 +79,9 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
-	viper.SetConfigName(".gocomlinter") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")        // adding home directory as first search path
-	viper.AutomaticEnv()                // read in environment variables that match
+	viper.SetConfigName(".codenanny") // name of config file (without extension)
+	viper.AddConfigPath("$HOME")      // adding home directory as first search path
+	viper.AutomaticEnv()              // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
