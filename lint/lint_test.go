@@ -47,13 +47,13 @@ func TestLintBasic(t *testing.T) {
 
 	CreateUnCheckedError()
 
-	err = lint.LintPackages(pkag)
+	err = lint.CheckPackages(pkag)
 
 	if err == nil {
 		t.Error("At least 1 error should have been detected")
 	}
 
-	err = lint.LintDirs(dirList)
+	err = lint.CheckDirs(dirList)
 
 	if err != nil {
 		t.Error("Lint dirs failed")

@@ -44,13 +44,17 @@ var lintCmd = &cobra.Command{
 			log.SetLevel(log.DebugLevel)
 			log.Debug("verbose mode enabled")
 		}
-		doLint()
+		if err := doLint(); err != nil {
+			log.Fatal("Lint found errors")
+		}
 	},
 }
 
-func doLint() {
+func doLint() (err error) {
 
-	installer.CheckExternalDependencies()
+	if err := installer.CheckExternalDependencies(); err != nil {
+		return err
+	}
 
 	log.Debug("List:", len(list))
 	log.Debug("Processing files:", list)
@@ -61,34 +65,29 @@ func doLint() {
 
 	if err != nil {
 		log.Error(err)
+		return err
 	}
 
-	err = lint.LintPackages(pkag)
+	err = lint.CheckPackages(pkag)
 
 	if err != nil {
 		log.Error("Lint packages failed:", err)
+		return err
 	}
 
-	err = lint.LintDirs(dirList)
+	err = lint.CheckDirs(dirList)
 
 	if err != nil {
 		log.Error("Lint dirs failed")
+		return err
 	}
 
+	return err
 }
 
 func init() {
 	RootCmd.AddCommand(lintCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// lintCmd.PersistentFlags().String("foo", "", "A help for foo")
-	RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// lintCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
+	RootCmd.Flags().StringVar(&list, "list", "", "list of files to process")
 
 }

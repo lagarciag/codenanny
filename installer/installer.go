@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 )
-
+//DisabledTool is used to track disabled tools.
 var DisabledTool map[string]bool
 
 var installMap = map[string]string{
@@ -52,8 +52,6 @@ var installMap = map[string]string{
 //CheckExternalDependencies checks if a required component is installed, if not, it go gets it.
 func CheckExternalDependencies()(err error) {
 	DisabledTool = make(map[string]bool)
-	log.SetLevel(log.DebugLevel)
-	log.Debug("Hello world")
 
 	for key := range installMap {
 		packageToGet := installMap[key]

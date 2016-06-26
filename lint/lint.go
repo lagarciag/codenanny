@@ -65,10 +65,11 @@ var dirLinters = []string{
 	"goconst",
 }
 
-func LintPackages(listOfPackages []string) (err error) {
+//CheckPackages runs linters and code checkers in the passed list of packages
+func CheckPackages(listOfPackages []string) (err error) {
 	//Find out what the Root Path is
 	var tmpErr error
-	var errCount int = 0
+	var errCount int
 	log.Debug("Checking pakages...", listOfPackages)
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	tmpRootPath, err := cmd.Output()
@@ -110,7 +111,8 @@ func LintPackages(listOfPackages []string) (err error) {
 	return err
 }
 
-func LintDirs(listOfDirs []string) (err error) {
+//CheckDirs runs linters and checkers on directories provided in listOfDirs
+func CheckDirs(listOfDirs []string) (err error) {
 	//Find out what the Root Path is
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	tmpRootPath, err := cmd.Output()

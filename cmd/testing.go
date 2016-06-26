@@ -23,48 +23,36 @@ package cmd
 import (
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/lagarciag/codenanny/dirlister"
 	"github.com/spf13/cobra"
 )
 
-var pathFlag string
+// testingCmd represents the testing command
+var testingCmd = &cobra.Command{
+	Use:   "testing",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
 
-// lintdirCmd represents the lintdir command
-var lintdirCmd = &cobra.Command{
-	Use:   "lintdir",
-	Short: "runs linters and code checkers on the provided dir using the -p flag",
-	Long:  `runs linters and code checkers on the provided dir using the -p flag`,
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		fmt.Println("lintdir called")
-		if verbose {
-			log.SetLevel(log.DebugLevel)
-			log.Debug("verbose mode enabled")
-		}
-
-		if err := lintdir(pathFlag); err != nil {
-			log.Fatal("Lint dir found errors")
-		}
-
+		fmt.Println("testing called")
 	},
 }
 
-func lintdir(path string) (err error) {
-	_, fileList, err := dirlister.ListDir(path)
-
-	if err != nil {
-		return err
-	}
-
-	log.Debug("The list:", fileList)
-	list = fileList
-	err = doLint()
-	return err
-}
-
 func init() {
-	RootCmd.AddCommand(lintdirCmd)
-	//RootCmd.PersistentFlags().StringVar(&path, "path", "p", "path to lint")
-	lintdirCmd.PersistentFlags().StringVarP(&pathFlag, "path", "p", "./", "path to lint")
+	RootCmd.AddCommand(testingCmd)
+
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// testingCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	// testingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
 }

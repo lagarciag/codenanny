@@ -18,7 +18,9 @@ func TestMain(t *testing.M) {
 
 func TestParserBasic(t *testing.T) {
 	//gopath := os.Getenv("GOPATH")
-	installer.CheckExternalDependencies()
+	if err := installer.CheckExternalDependencies(); err != nil {
+		t.Error("Error found checking dependencies")
+	}
 	if err := installer.CheckExternalDependencies(); err != nil {
 		t.Error(err)
 	}
