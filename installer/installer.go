@@ -52,7 +52,7 @@ func CheckExternalDependencies()(err error) {
 
 	for key := range installMap {
 		packageToGet := installMap[key]
-		log.Debug("Getting package:",packageToGet)
+		log.Debug("checking installation:",packageToGet)
 		_, err := exec.LookPath(key)
 
 		if err != nil {
@@ -63,13 +63,14 @@ func CheckExternalDependencies()(err error) {
 				log.Error(err)
 				return err
 			}
+
 			if _, err := exec.LookPath(key); err != nil {
 				nErr := fmt.Errorf("After installing %s, still can't find it:%s",key,err)
 				log.Error(nErr.Error())
 				return nErr
 			}
-
 			log.Debug(getOut)
+			log.Debug("Package is good:",packageToGet)
 		}
 		log.Debug("Found:",key)
 	}
