@@ -21,8 +21,12 @@ package installer
 import (
 	log "github.com/Sirupsen/logrus"
 	"os/exec"
+	"os"
 	"fmt"
+	"strings"
 )
+
+var DisabledTool map[string]bool
 
 var installMap = map[string]string{
 	"golint":      "github.com/golang/lint/golint",
@@ -43,10 +47,12 @@ var installMap = map[string]string{
 	"goconst":     "github.com/jgautheron/goconst/cmd/goconst",
 	"gosimple":    "honnef.co/go/simple/cmd/gosimple",
 	"staticcheck": "honnef.co/go/staticcheck/cmd/staticcheck",
+	"aqsdf": "asdf",
 }
 
 //CheckExternalDependencies checks if a required component is installed, if not, it go gets it.
 func CheckExternalDependencies()(err error) {
+	DisabledTool = make(map[string]bool)
 	log.SetLevel(log.DebugLevel)
 	log.Debug("Hello world")
 
@@ -65,6 +71,17 @@ func CheckExternalDependencies()(err error) {
 
 				if err != nil {
 					installErr = fmt.Errorf("installing %s attempt %d failed.  OUT: %s",packageToGet,attempt,string(getOut))
+					gopath := os.Getenv("GOPATH")
+					splitGoPath := strings.Split(gopath,":")
+					for _ , path := range splitGoPath {
+						log.Debug("PATH",path)
+						fullPackagePath := path + fmt.Sprintf("/%s",packageToGet)
+						if _, err := os.Stat(fullPackagePath); os.IsExist(err) {
+							rmErr := os.Remove(fullPackagePath)
+							log.Error("Could not remove:",rmErr)
+						}
+					}
+
 					log.Error(installErr)
 				}else {
 					log.Debugf("installaing %s is good.  Attempt: %d",packageToGet,attempt)
@@ -75,17 +92,23 @@ func CheckExternalDependencies()(err error) {
 			}
 
 			if installErr != nil {
-				nErr := fmt.Errorf("Installation of %s did not work, returned:%s",packageToGet,err.Error())
+				nErr := fmt.Errorf("Installation of %s did not work, returned:%s.  Disabling",packageToGet,err.Error())
 				log.Error(nErr)
-				return nErr
+				DisabledTool[key] = true
+			}else {
+				if _, err := exec.LookPath(key); err != nil {
+					nErr := fmt.Errorf("After installing %s, still can't find it:%s",key,err)
+					log.Error(nErr.Error())
+					DisabledTool[key] = true
+				}else{
+					log.Debug("Package is good:",packageToGet)
+					DisabledTool[key] = false
+
+				}
+
 			}
 
-			if _, err := exec.LookPath(key); err != nil {
-				nErr := fmt.Errorf("After installing %s, still can't find it:%s",key,err)
-				log.Error(nErr.Error())
-				return nErr
-			}
-			log.Debug("Package is good:",packageToGet)
+
 		}
 		log.Debug("Already installed:",key)
 	}

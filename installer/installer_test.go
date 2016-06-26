@@ -27,6 +27,7 @@ import (
 
 func TestMain(t *testing.M) {
 	log.SetLevel(log.DebugLevel)
+	log.SetFormatter(&log.TextFormatter{})
 	v := t.Run()
 	os.Exit(v)
 

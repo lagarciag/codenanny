@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/installer"
 )
 
 var lintersFlag = map[string]string{
@@ -85,20 +86,23 @@ func LintPackages(listOfPackages []string) (err error) {
 	for _, aPackage := range listOfPackages {
 		log.Debug("Checking package:", aPackage)
 		for _, linter := range packageLinters {
-			log.Debug("Running package checker:", linter)
-			cmdString := lintersFlag[linter]
-			splitCmd := strings.Split(cmdString, " ")
-			msg := fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aPackage)
-			log.Debug(msg)
-			cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				errCount++
-				tmpErr = fmt.Errorf("%s found error in:\n%s", linter, string(out))
-				log.Error(tmpErr)
+			if !installer.DisabledTool[linter] {
+				log.Debug("Running package checker:", linter)
+				cmdString := lintersFlag[linter]
+				splitCmd := strings.Split(cmdString, " ")
+				msg := fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aPackage)
+				log.Debug(msg)
+				cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					errCount++
+					tmpErr = fmt.Errorf("%s found error in:\n%s", linter, string(out))
+					log.Error(tmpErr)
+				}
+			} else {
+				log.Warn("Could not run disabled tool:", linter)
 			}
 		}
-
 	}
 	if tmpErr != nil {
 		err = fmt.Errorf("Founf %d package linter errors", errCount)
@@ -124,34 +128,37 @@ func LintDirs(listOfDirs []string) (err error) {
 	for _, aDir := range listOfDirs {
 		log.Debug("Checking dir:", aDir)
 		for _, linter := range dirLinters {
-			log.Debug("Running dir checker:", linter)
-			cmdString := lintersFlag[linter]
-			splitCmd := strings.Split(cmdString, " ")
-			var msg string
-			var cmd *exec.Cmd
-			if len(splitCmd) == 2 {
-				msg = fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
-				log.Debug(msg)
-				cmd = exec.Command(splitCmd[0], splitCmd[1], aDir)
-			} else if len(splitCmd) == 1 {
-				msg = fmt.Sprintf("CMD: %s %s ", splitCmd[0], aDir)
-				log.Debug(msg)
-				cmd = exec.Command(splitCmd[0], aDir)
+			if !installer.DisabledTool[linter] {
+				log.Debug("Running dir checker:", linter)
+				cmdString := lintersFlag[linter]
+				splitCmd := strings.Split(cmdString, " ")
+				var msg string
+				var cmd *exec.Cmd
+				if len(splitCmd) == 2 {
+					msg = fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
+					log.Debug(msg)
+					cmd = exec.Command(splitCmd[0], splitCmd[1], aDir)
+				} else if len(splitCmd) == 1 {
+					msg = fmt.Sprintf("CMD: %s %s ", splitCmd[0], aDir)
+					log.Debug(msg)
+					cmd = exec.Command(splitCmd[0], aDir)
+				} else {
+					log.Error("CMD:", splitCmd[0])
+					log.Error("LENTH:", len(splitCmd))
+					log.Fatal("Handle this error")
+				}
+
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					log.Debug("args:", cmd.Args)
+					err = fmt.Errorf("%s found error in:%s", linter, string(out))
+					log.Error(err)
+					return err
+				}
 			} else {
-				log.Error("CMD:", splitCmd[0])
-				//log.Error("CMD:", splitCmd[1])
-				//log.Error("CMD:", splitCmd[2])
-				log.Error("LENTH:", len(splitCmd))
-				log.Fatal("Handle this error")
+				log.Warn("Could not run disabled tool:", linter)
 			}
 
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				log.Debug("args:", cmd.Args)
-				err = fmt.Errorf("%s found error in:%s", linter, string(out))
-				log.Error(err)
-				return err
-			}
 		}
 
 	}
