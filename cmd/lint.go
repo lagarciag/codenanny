@@ -22,6 +22,7 @@ package cmd
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/installer"
 	"github.com/lagarciag/codenanny/lint"
 	"github.com/lagarciag/codenanny/parser"
 	"github.com/spf13/cobra"
@@ -48,6 +49,8 @@ var lintCmd = &cobra.Command{
 }
 
 func doLint() {
+
+	installer.CheckExternalDependencies()
 
 	log.Debug("List:", len(list))
 	log.Debug("Processing files:", list)

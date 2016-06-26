@@ -28,6 +28,7 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/installer"
 	"github.com/spf13/cobra"
 )
 
@@ -59,6 +60,7 @@ to quickly create a Cobra application.`,
 }
 
 func lintdir() (err error) {
+	installer.CheckExternalDependencies()
 	dirList = llist.New()
 	err = filepath.Walk("./", visit)
 	if err != nil {

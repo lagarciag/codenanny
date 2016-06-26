@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/lagarciag/codenanny/installer"
 	"github.com/lagarciag/codenanny/lint"
 	"github.com/lagarciag/codenanny/parser"
 )
@@ -20,6 +21,7 @@ func TestMain(t *testing.M) {
 
 func TestParserBasic(t *testing.T) {
 	//gopath := os.Getenv("GOPATH")
+	installer.CheckExternalDependencies()
 	var1 := "parser/parser.go"
 	var2 := "parser/parser_test.go"
 	var3 := "cmd/root.go"
