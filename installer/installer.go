@@ -43,7 +43,6 @@ var installMap = map[string]string{
 	"goconst":     "github.com/jgautheron/goconst/cmd/goconst",
 	"gosimple":    "honnef.co/go/simple/cmd/gosimple",
 	"staticcheck": "honnef.co/go/staticcheck/cmd/staticcheck",
-	"asdf" : "asdf.asdfasdf/a",
 }
 
 //CheckExternalDependencies checks if a required component is installed, if not, it go gets it.
@@ -58,18 +57,24 @@ func CheckExternalDependencies()(err error) {
 
 		if err != nil {
 			log.Debug("Need to install:",packageToGet)
-
+			var installErr error
 			for attempt :=0 ; attempt < 5; attempt++ {
 
 				cmd := exec.Command("go", "get", packageToGet,)
 				getOut, err := cmd.CombinedOutput()
 
 				if err != nil {
-					log.Errorf("installing %s attempt %d failed.  OUT: %s",packageToGet,attempt,string(getOut))
+					installErr = fmt.Errorf("installing %s attempt %d failed.  OUT: %s",packageToGet,attempt,string(getOut))
+					log.Error(installErr)
+				}else {
+					log.Debugf("installaing %s is good.  Attempt: %d",packageToGet,attempt)
+					installErr = nil
+					break
 				}
+
 			}
 
-			if err != nil {
+			if installErr != nil {
 				nErr := fmt.Errorf("Installation of %s did not work, returned:%s",packageToGet,err.Error())
 				log.Error(nErr)
 				return nErr
@@ -82,7 +87,7 @@ func CheckExternalDependencies()(err error) {
 			}
 			log.Debug("Package is good:",packageToGet)
 		}
-		log.Debug("Found:",key)
+		log.Debug("Already installed:",key)
 	}
 	return err
 
