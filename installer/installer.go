@@ -47,7 +47,6 @@ var installMap = map[string]string{
 	"goconst":     "github.com/jgautheron/goconst/cmd/goconst",
 	"gosimple":    "honnef.co/go/simple/cmd/gosimple",
 	"staticcheck": "honnef.co/go/staticcheck/cmd/staticcheck",
-	"aqsdf": "asdf",
 }
 
 //CheckExternalDependencies checks if a required component is installed, if not, it go gets it.
