@@ -20,8 +20,15 @@
 
 package main
 
-import "github.com/lagarciag/codenanny/cmd"
+import (
+	"fmt"
+	"os"
+
+	"github.com/lagarciag/codenanny/cmd"
+)
 
 func main() {
+	args := os.Args
+	fmt.Println("ARGS:", args)
 	cmd.Execute()
 }

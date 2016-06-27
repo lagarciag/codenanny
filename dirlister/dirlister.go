@@ -19,18 +19,18 @@
 package dirlister
 
 import (
-	"path/filepath"
 	"container/list"
+	"path/filepath"
+
 	log "github.com/Sirupsen/logrus"
 
 	"os"
 	"regexp"
 )
 
-
 //ListDir returns in multiple formats a list of go files found recursively in the provided directory.
-func ListDir(path string) (dirListSlice []string, dirListString string , err error) {
-	log.Debug("Dir lister:",path)
+func ListDir(path string) (dirListSlice []string, dirListString string, err error) {
+	log.Debug("Dir lister:", path)
 	//------------------------------
 	//Create a list
 	//-------------------------------
@@ -42,7 +42,7 @@ func ListDir(path string) (dirListSlice []string, dirListString string , err err
 	visit := func(path string, f os.FileInfo, err error) error {
 		match, _ := regexp.MatchString((".go$"), path)
 		if match {
-		dirList.PushBack(path)
+			dirList.PushBack(path)
 		}
 		return err
 	}
@@ -60,7 +60,7 @@ func ListDir(path string) (dirListSlice []string, dirListString string , err err
 	//-----------------------------------
 	//Iterate the list
 	//-----------------------------------
-	dirListSlice = make([]string,size)
+	dirListSlice = make([]string, size)
 	dirListString = ""
 	count := 0
 	for e := dirList.Front(); e != nil; e = e.Next() {

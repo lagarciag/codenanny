@@ -19,12 +19,14 @@
 package installer
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"os/exec"
-	"os"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
+
 //DisabledTool is used to track disabled tools.
 var DisabledTool map[string]bool
 
@@ -50,38 +52,38 @@ var installMap = map[string]string{
 }
 
 //CheckExternalDependencies checks if a required component is installed, if not, it go gets it.
-func CheckExternalDependencies()(err error) {
+func CheckExternalDependencies() (err error) {
 	DisabledTool = make(map[string]bool)
 
 	for key := range installMap {
 		packageToGet := installMap[key]
-		log.Debug("checking installation:",packageToGet)
+		log.Debug("checking installation:", packageToGet)
 		_, err := exec.LookPath(key)
 
 		if err != nil {
-			log.Debug("Need to install:",packageToGet)
+			log.Debug("Need to install:", packageToGet)
 			var installErr error
-			for attempt :=0 ; attempt < 5; attempt++ {
+			for attempt := 0; attempt < 5; attempt++ {
 
-				cmd := exec.Command("go", "get", packageToGet,)
+				cmd := exec.Command("go", "get", packageToGet)
 				getOut, err := cmd.CombinedOutput()
 
 				if err != nil {
-					installErr = fmt.Errorf("installing %s attempt %d failed.  OUT: %s",packageToGet,attempt,string(getOut))
+					installErr = fmt.Errorf("installing %s attempt %d failed.  OUT: %s", packageToGet, attempt, string(getOut))
 					gopath := os.Getenv("GOPATH")
-					splitGoPath := strings.Split(gopath,":")
-					for _ , path := range splitGoPath {
-						log.Debug("PATH",path)
-						fullPackagePath := path + fmt.Sprintf("/%s",packageToGet)
+					splitGoPath := strings.Split(gopath, ":")
+					for _, path := range splitGoPath {
+						log.Debug("PATH", path)
+						fullPackagePath := path + fmt.Sprintf("/%s", packageToGet)
 						if _, err := os.Stat(fullPackagePath); os.IsExist(err) {
 							rmErr := os.Remove(fullPackagePath)
-							log.Error("Could not remove:",rmErr)
+							log.Error("Could not remove:", rmErr)
 						}
 					}
 
 					log.Error(installErr)
-				}else {
-					log.Debugf("installaing %s is good.  Attempt: %d",packageToGet,attempt)
+				} else {
+					log.Debugf("installaing %s is good.  Attempt: %d", packageToGet, attempt)
 					installErr = nil
 					break
 				}
@@ -89,25 +91,24 @@ func CheckExternalDependencies()(err error) {
 			}
 
 			if installErr != nil {
-				nErr := fmt.Errorf("Installation of %s did not work, returned:%s.  Disabling",packageToGet,err.Error())
+				nErr := fmt.Errorf("Installation of %s did not work, returned:%s.  Disabling", packageToGet, err.Error())
 				log.Error(nErr)
 				DisabledTool[key] = true
-			}else {
+			} else {
 				if _, err := exec.LookPath(key); err != nil {
-					nErr := fmt.Errorf("After installing %s, still can't find it:%s",key,err)
+					nErr := fmt.Errorf("After installing %s, still can't find it:%s", key, err)
 					log.Error(nErr.Error())
 					DisabledTool[key] = true
-				}else{
-					log.Debug("Package is good:",packageToGet)
+				} else {
+					log.Debug("Package is good:", packageToGet)
 					DisabledTool[key] = false
 
 				}
 
 			}
 
-
 		}
-		log.Debug("Already installed:",key)
+		log.Debug("Already installed:", key)
 	}
 	return err
 

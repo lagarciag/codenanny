@@ -21,6 +21,9 @@
 package cmd
 
 import (
+	"container/list"
+	"os"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/lagarciag/codenanny/installer"
 	"github.com/lagarciag/codenanny/lint"
@@ -28,7 +31,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var list string
+var argList string
 
 // lintCmd represents the lint command
 var lintCmd = &cobra.Command{
@@ -37,7 +40,7 @@ var lintCmd = &cobra.Command{
 	Long:  `Runs the linters`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		if list == "" {
+		if argList == "" {
 			log.Fatal("--list flag must be set and point to a list of files that need to be linted")
 		}
 		if verbose {
@@ -55,13 +58,36 @@ func doLint() (err error) {
 	if err := installer.CheckExternalDependencies(); err != nil {
 		return err
 	}
+	log.Debug("ARGS:", os.Args)
+	cList := list.New()
+	takeArg := false
+	for _, fArg := range os.Args {
+		if takeArg {
+			log.Debug("ARG:", fArg)
+			cList.PushBack(fArg)
+		}
 
-	log.Debug("List:", len(list))
-	log.Debug("Processing files:", list)
+		if fArg == "--list" {
+			takeArg = true
+		}
+	}
+	listSize := cList.Len()
+	listSlice := make([]string, listSize)
 
-	dirList, pkag, err := parser.Parse(list)
+	eID := 0
+	for e := cList.Front(); e != nil; e = e.Next() {
+		log.Debug("ADDING ARG:", e.Value.(string))
+		listSlice[eID] = e.Value.(string)
+		eID++
+	}
+
+	log.Debug("List:", len(listSlice))
+	log.Debug("Processing files:", listSlice)
+
+	dirList, pkag, err := parser.Parse(listSlice)
 
 	log.Debug("Packages:", pkag)
+	log.Debug("dirList:", dirList)
 
 	if err != nil {
 		log.Error(err)
@@ -88,6 +114,6 @@ func doLint() (err error) {
 func init() {
 	RootCmd.AddCommand(lintCmd)
 	//RootCmd.PersistentFlags().StringVar(&list, "list", "", "list of files to process")
-	RootCmd.Flags().StringVar(&list, "list", "", "list of files to process")
+	lintCmd.Flags().StringVar(&argList, "list", "./", "list of files to process")
 
 }

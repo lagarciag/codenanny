@@ -15,16 +15,15 @@
  * under the License.
  */
 
-//installer does this blah blah
-package dirlister_test
+//config does this blah blah
+package config_test
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/lagarciag/codenanny/dirlister"
+	"github.com/lagarciag/codenanny/config"
 )
 
 func TestMain(t *testing.M) {
@@ -35,25 +34,9 @@ func TestMain(t *testing.M) {
 
 }
 
-func TestDirListerBasic(t *testing.T) {
-	rawGopath := os.Getenv("GOPATH")
-	splitGoPath := strings.Split(rawGopath, ":")
-	gopath := splitGoPath[len(splitGoPath)-1]
-	if err := os.Chdir(gopath + "/src/github.com/lagarciag/codenanny/"); err != nil {
-		t.Error("Could not change dir")
+func TestConfigBasic(t *testing.T) {
+	log.Debug("TestConfig run")
+	if err := config.LoadConfig(); err != nil {
+		t.Error("error loading config:", err)
 	}
-
-	t.Log("TestDirLister run")
-
-	dirListSlice, dirListString, err := dirlister.ListDir("./")
-
-	if err != nil {
-		t.Error("Dir list error:", err.Error())
-	}
-	if len(dirListSlice) != 15 {
-		t.Error("List size should be 15, but it is:", len(dirListSlice))
-	}
-	t.Log("dirList:", dirListSlice)
-	t.Log("dirString:", dirListString)
-
 }

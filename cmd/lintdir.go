@@ -58,7 +58,7 @@ func lintdir(path string) (err error) {
 	}
 
 	log.Debug("The list:", fileList)
-	list = fileList
+	argList = fileList
 	err = doLint()
 	return err
 }

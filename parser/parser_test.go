@@ -4,8 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"fmt"
-
 	"github.com/lagarciag/codenanny/installer"
 	"github.com/lagarciag/codenanny/parser"
 )
@@ -27,8 +25,8 @@ func TestParserBasic(t *testing.T) {
 	var1 := "parser/parser.go"
 	var2 := "parser/parser_test.go"
 	var3 := "cmd/root.go"
-
-	dirList, pkag, err := parser.Parse(fmt.Sprintf("%s %s %s", var1, var2, var3))
+	argsSlice := []string{var1, var2, var3}
+	dirList, pkag, err := parser.Parse(argsSlice)
 
 	if err != nil {
 		t.Error("Error:", err)

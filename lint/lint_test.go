@@ -20,7 +20,6 @@ func TestMain(t *testing.M) {
 }
 
 func TestLintBasic(t *testing.T) {
-	//gopath := os.Getenv("GOPATH")
 	if err := installer.CheckExternalDependencies(); err != nil {
 		t.Error(err)
 	}
@@ -28,8 +27,8 @@ func TestLintBasic(t *testing.T) {
 	var2 := "parser/parser_test.go"
 	var3 := "cmd/root.go"
 	var4 := "lint/lint.go"
-
-	dirList, pkag, err := parser.Parse(fmt.Sprintf("%s %s %s %s", var1, var2, var3, var4))
+	argsVars := []string{var1, var2, var3, var4}
+	dirList, pkag, err := parser.Parse(argsVars)
 
 	if err != nil {
 		t.Error("Error:", err)

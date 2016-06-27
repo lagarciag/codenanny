@@ -35,7 +35,7 @@ import (
 )
 
 //Parse parses the provided list of modified files
-func Parse(stringList string) (dir []string, pkag []string, err error) {
+func Parse(stringList []string) (dir []string, pkag []string, err error) {
 
 	//Find out what the Root Path is
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
@@ -50,7 +50,7 @@ func Parse(stringList string) (dir []string, pkag []string, err error) {
 	if err != nil {
 		return dir, pkag, err
 	}
-
+	log.Debug("PARSE:", stringList)
 	dir, err = getUniqueDirs(stringList)
 	pkag, err = getUniquePkgs(dir)
 
@@ -88,9 +88,9 @@ func getUniquePkgs(dirList []string) (pkgList []string, err error) {
 	return pkgList, nil
 }
 
-func getUniqueDirs(stringList string) (dir []string, err error) {
+func getUniqueDirs(stringList []string) (dir []string, err error) {
 	dirsHash := make(map[string]bool)
-	splitString := strings.Split(stringList, " ")
+	splitString := stringList //strings.Split(stringList, " ")
 	log.Debug("Stringlist:", splitString)
 	for _, file := range splitString {
 		path := filepath.Dir(file)

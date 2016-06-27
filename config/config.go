@@ -15,29 +15,10 @@
  * under the License.
  */
 
-//installer does this blah blah
-package installer_test
+//config does this blah blah
+package config
 
-import (
-	"os"
-	"testing"
+func LoadConfig() (err error) {
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/lagarciag/codenanny/installer"
-)
-
-func TestMain(t *testing.M) {
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(&log.TextFormatter{})
-	v := t.Run()
-	os.Exit(v)
-
-}
-
-func TestInstallerBasic(t *testing.T) {
-
-	if err := installer.CheckExternalDependencies(); err != nil {
-		t.Error("Could not install package:", err)
-	}
-
+	return nil
 }
