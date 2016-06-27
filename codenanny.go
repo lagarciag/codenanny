@@ -21,14 +21,16 @@
 package main
 
 import (
-	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"os"
-
 	"github.com/lagarciag/codenanny/cmd"
+
 )
 
 func main() {
-	args := os.Args
-	fmt.Println("ARGS:", args)
+	log.SetOutput(os.Stderr)
+	formatter := log.TextFormatter{}
+	formatter.ForceColors = true
+	log.SetFormatter(&formatter)
 	cmd.Execute()
 }
