@@ -47,17 +47,14 @@ var lintCmd = &cobra.Command{
 			log.SetLevel(log.DebugLevel)
 			log.Debug("verbose mode enabled")
 		}
-		if err := doLint(); err != nil {
+		if err := doLint(parseListFromArgs()); err != nil {
 			log.Fatal("Lint found errors")
 		}
 	},
 }
 
-func doLint() (err error) {
+func parseListFromArgs() (listSlice []string) {
 
-	if err := installer.CheckExternalDependencies(); err != nil {
-		return err
-	}
 	log.Debug("ARGS:", os.Args)
 	cList := list.New()
 	takeArg := false
@@ -72,7 +69,7 @@ func doLint() (err error) {
 		}
 	}
 	listSize := cList.Len()
-	listSlice := make([]string, listSize)
+	listSlice = make([]string, listSize)
 
 	eID := 0
 	for e := cList.Front(); e != nil; e = e.Next() {
@@ -83,6 +80,15 @@ func doLint() (err error) {
 
 	log.Debug("List:", len(listSlice))
 	log.Debug("Processing files:", listSlice)
+
+	return listSlice
+}
+
+func doLint(listSlice []string) (err error) {
+
+	if err := installer.CheckExternalDependencies(); err != nil {
+		return err
+	}
 
 	dirList, pkag, err := parser.Parse(listSlice)
 

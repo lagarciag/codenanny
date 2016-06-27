@@ -51,15 +51,14 @@ var lintdirCmd = &cobra.Command{
 }
 
 func lintdir(path string) (err error) {
-	_, fileList, err := dirlister.ListDir(path)
+	fileSlice, _, err := dirlister.ListDir(path)
 
 	if err != nil {
 		return err
 	}
 
-	log.Debug("The list:", fileList)
-	argList = fileList
-	err = doLint()
+	log.Debug("The list:", fileSlice)
+	err = doLint(fileSlice)
 	return err
 }
 
