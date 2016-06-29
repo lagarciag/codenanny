@@ -131,9 +131,7 @@ func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err er
 	var aLine string
 	var pattern string
 	var match = false
-	patterns := config.GlobalConfig.IgnorePattern.Patterns
-	log.Debug("READERRORS...")
-	log.Debug("TOOL", tool)
+	patterns := config.GlobalConfig.IgnorePattern
 
 	listOfPatterns, foundPattern := patterns[tool]
 	log.Debug("PATTERNS", listOfPatterns)
@@ -165,10 +163,10 @@ func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err er
 		}
 		if !match && aLine != "" {
 			errList.PushBack(aLine)
-			log.Error(aLine)
+			log.Errorf("%s:%s",tool,aLine)
 		} else {
 			if aLine != "" {
-				log.Warn(aLine)
+				log.Warnf("%s:%s",tool,aLine)
 			}
 		}
 		match = false

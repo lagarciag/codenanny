@@ -24,7 +24,10 @@ import (
 	"container/list"
 	"os"
 
+	"regexp"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/installer"
 	"github.com/lagarciag/codenanny/lint"
 	"github.com/lagarciag/codenanny/parser"
@@ -86,6 +89,8 @@ func parseListFromArgs() (listSlice []string) {
 
 func doLint(listSlice []string) (err error) {
 
+	listSlice, _ = filterList(listSlice)
+
 	if err := installer.CheckExternalDependencies(); err != nil {
 		return err
 	}
@@ -115,6 +120,28 @@ func doLint(listSlice []string) (err error) {
 	}
 
 	return err
+}
+
+func filterList(listSlice []string) (newListSlice []string, err error) {
+	tmpList := list.New()
+	for _, file := range listSlice {
+		match := false
+		if config.GlobalConfig.IgnorePath != "" {
+			match, _ = regexp.MatchString(config.GlobalConfig.IgnorePath, file)
+		}
+		if !match {
+			tmpList.PushBack(file)
+		} else {
+			log.Warn("Ignore path matched:", file)
+		}
+	}
+	newListSlice = make([]string, tmpList.Len())
+	count := 0
+	for e := tmpList.Front(); e != nil; e = e.Next() {
+		newListSlice[count] = e.Value.(string)
+		count++
+	}
+	return newListSlice, err
 }
 
 func init() {

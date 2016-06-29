@@ -50,8 +50,8 @@ func TestDirListerBasic(t *testing.T) {
 	if err != nil {
 		t.Error("Dir list error:", err.Error())
 	}
-	if len(dirListSlice) != 15 {
-		t.Error("List size should be 15, but it is:", len(dirListSlice))
+	if len(dirListSlice) != 17 {
+		t.Error("List size should be 17, but it is:", len(dirListSlice))
 	}
 	t.Log("dirList:", dirListSlice)
 	t.Log("dirString:", dirListString)

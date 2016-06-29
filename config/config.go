@@ -33,16 +33,9 @@ var GlobalConfig CodeNannyConfig
 
 //CodeNannyConfig is the struct used to marshall in the configuration
 type CodeNannyConfig struct {
-	Disabled      string    `yaml:"disabled"`
-	IgnorePattern IgnorePat `yaml:"ignore_pattern"`
-}
-
-//IgnorePat is hols the lists of error ignores for each checker
-type IgnorePat struct {
-	Golint   []string `yaml:"golint"`
-	ErrCheck []string `yaml:"errcheck"`
-	Asdf     []string `yaml:"asdf"`
-	Patterns map[string][]string
+	Disabled      string              `yaml:"disabled"`
+	IgnorePattern map[string][]string `yaml:"ignore_pattern"`
+	IgnorePath    string              `yaml:"ignore_path_pattern"`
 }
 
 //LoadConfig loads and processes the configuration file
@@ -75,15 +68,17 @@ func LoadConfig() (err error) {
 		if err := yaml.Unmarshal(yamlFile, &GlobalConfig); err != nil {
 			return err
 		}
-		GlobalConfig.IgnorePattern.Patterns = make(map[string][]string)
+
+		/*GlobalConfig.IgnorePattern.Patterns = make(map[string][]string)
 
 		if GlobalConfig.IgnorePattern.Golint != nil {
 			log.Debug("Configuring patters for golint:", GlobalConfig.IgnorePattern.Golint)
 			GlobalConfig.IgnorePattern.Patterns["golint"] = GlobalConfig.IgnorePattern.Golint
 		}
 		if GlobalConfig.IgnorePattern.ErrCheck != nil {
-			GlobalConfig.IgnorePattern.Patterns["errcheck"] = GlobalConfig.IgnorePattern.Golint
+			GlobalConfig.IgnorePattern.Patterns["errcheck"] = GlobalConfig.IgnorePattern.ErrCheck
 		}
+		*/
 
 		log.Debug(GlobalConfig)
 	} else {
