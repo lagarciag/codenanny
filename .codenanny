@@ -1,4 +1,5 @@
-disabled: "tbd"
+disabled: 
+         interfacer: true
 ignore_pattern:
                errcheck: ["lint_test.go:.+:.+CreateUnCheckedError","packagewitherrors.go:.+:.+returnError"]
 ignore_path_pattern: "dirtoexclude"		 

@@ -46,9 +46,9 @@ var lintersFlag = map[string]string{
 	"gofmt":       `gofmt -l -s ./*.go:^(?P<path>[^\n]+)$`,
 	"goimports":   `goimports -w`,
 	"golint":      "golint -set_exit_status ",
-	"gotype":      "gotype -e {tests=-a} .:PATH:LINE:COL:MESSAGE",
+	"gotype":      "gotype -e -a ",
 	"ineffassign": `ineffassign -n .:PATH:LINE:COL:MESSAGE`,
-	"interfacer":  `interfacer ./:PATH:LINE:COL:MESSAGE`,
+	"interfacer":  `interfacer `,
 	"lll":         `lll -g -l {maxlinelength} ./*.go:PATH:LINE:MESSAGE`,
 	"structcheck": `structcheck {tests=-t} .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$`,
 	"test":        `go test:^--- FAIL: .*$\s+(?P<path>[^:]+):(?P<line>\d+): (?P<message>.*)$`,
@@ -56,9 +56,9 @@ var lintersFlag = map[string]string{
 	"varcheck":    `varcheck .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$`,
 	"vet":         "go vet ",
 	"vetshadow":   "go tool vet --shadow ./*.go:PATH:LINE:MESSAGE",
-	"unconvert":   "unconvert .:PATH:LINE:COL:MESSAGE",
+	"unconvert":   "unconvert -apply",
 	"gosimple":    "gosimple ",
-	"staticcheck": "staticcheck .:PATH:LINE:COL:MESSAGE",
+	"staticcheck": "staticcheck ",
 	"misspell":    "misspell ./*.go:PATH:LINE:COL:MESSAGE",
 }
 
@@ -67,6 +67,9 @@ var packageLinters = []string{
 	"golint",
 	"vet",
 	"gosimple",
+	//	"unconvert",
+	//	"staticcheck",
+	//	"interfacer",
 }
 var dirLinters = []string{
 	"goimports",
@@ -182,6 +185,8 @@ func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err er
 
 //CheckDirs runs linters and checkers on directories provided in listOfDirs
 func CheckDirs(listOfDirs []string) (err error) {
+	var errCount int
+	var tmpErr error
 	//Find out what the Root Path is
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	tmpRootPath, err := cmd.Output()
@@ -206,11 +211,19 @@ func CheckDirs(listOfDirs []string) (err error) {
 				var msg string
 				var cmd *exec.Cmd
 				if len(splitCmd) == 2 {
-					msg = fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
+					msg = fmt.Sprintf("DIR CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
 					log.Debug(msg)
 					cmd = exec.Command(splitCmd[0], splitCmd[1], aDir)
 				} else if len(splitCmd) == 1 {
-					msg = fmt.Sprintf("CMD: %s %s ", splitCmd[0], aDir)
+					msg = fmt.Sprintf("DIR CMD: %s %s ", splitCmd[0], aDir)
+					log.Debug(msg)
+					cmd = exec.Command(splitCmd[0], aDir)
+				} else if len(splitCmd) == 3 {
+					msg = fmt.Sprintf("DIR CMD: %s %s %s %s", splitCmd[0], splitCmd[1], splitCmd[2], aDir)
+					log.Debug(msg)
+					cmd = exec.Command(splitCmd[0], aDir)
+				} else if len(splitCmd) == 4 {
+					msg = fmt.Sprintf("DIR CMD: %s %s %s %s %s", splitCmd[0], splitCmd[1], splitCmd[2], splitCmd[3], aDir)
 					log.Debug(msg)
 					cmd = exec.Command(splitCmd[0], aDir)
 				} else {
@@ -221,11 +234,25 @@ func CheckDirs(listOfDirs []string) (err error) {
 
 				out, err := cmd.CombinedOutput()
 				if err != nil {
-					log.Debug("args:", cmd.Args)
-					err = fmt.Errorf("%s found error in:%s", linter, string(out))
-					log.Error(err)
-					return err
+					//Check patterns here
+					errList, _ := readErrorsFromChecker(out, linter)
+					if len(errList) > 0 {
+						errCount++
+						tmpErr = fmt.Errorf("%s found errors", linter)
+						log.Error(tmpErr)
+					} else {
+						log.Warnf("%s found Errors but an error ingnore matched", linter)
+						err = nil
+					}
 				}
+				/*
+					if err != nil {
+						log.Debug("args:", cmd.Args)
+						err = fmt.Errorf("%s found error in:%s", linter, string(out))
+						log.Error(err)
+						return err
+					}
+				*/
 			} else {
 				log.Warn("Could not run disabled tool:", linter)
 			}
@@ -233,6 +260,8 @@ func CheckDirs(listOfDirs []string) (err error) {
 		}
 
 	}
-
+	if tmpErr != nil {
+		err = fmt.Errorf("Found %d package linter errors", errCount)
+	}
 	return nil
 }

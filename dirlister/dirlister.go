@@ -69,6 +69,6 @@ func ListDir(path string) (dirListSlice []string, dirListString string, err erro
 		dirListString = dirListString + e.Value.(string) + " "
 		count++
 	}
-
+	log.Debug("LISTER OUT:", dirListSlice)
 	return dirListSlice, dirListString, err
 }

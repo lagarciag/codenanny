@@ -51,14 +51,15 @@ var lintdirCmd = &cobra.Command{
 			log.Fatal("error loading config:", err)
 		}
 
-		if err := lintdir(pathFlag); err != nil {
+		if err := Lintdir(pathFlag); err != nil {
 			log.Fatal("Lint dir found errors")
 		}
 
 	},
 }
 
-func lintdir(path string) (err error) {
+//Lintdir is a helper function that creates a list of all the files found in the provided directory
+func Lintdir(path string) (err error) {
 	fileSlice, _, err := dirlister.ListDir(path)
 
 	for _, dir := range fileSlice {

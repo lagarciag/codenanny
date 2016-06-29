@@ -33,7 +33,7 @@ var GlobalConfig CodeNannyConfig
 
 //CodeNannyConfig is the struct used to marshall in the configuration
 type CodeNannyConfig struct {
-	Disabled      string              `yaml:"disabled"`
+	Disabled      map[string]bool     `yaml:"disabled"`
 	IgnorePattern map[string][]string `yaml:"ignore_pattern"`
 	IgnorePath    string              `yaml:"ignore_path_pattern"`
 }

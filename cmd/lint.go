@@ -53,7 +53,11 @@ var lintCmd = &cobra.Command{
 		if err := config.LoadConfig(); err != nil {
 			log.Fatal("error loading config:", err)
 		}
-		if err := doLint(parseListFromArgs()); err != nil {
+		dirSlice := parseListFromArgs()
+
+		log.Debug("DIR SLICE:", dirSlice)
+
+		if err := doLint(dirSlice); err != nil {
 			log.Fatal("Lint found errors")
 		}
 	},
@@ -67,7 +71,11 @@ func parseListFromArgs() (listSlice []string) {
 	for _, fArg := range os.Args {
 		if takeArg {
 			log.Debug("ARG:", fArg)
-			cList.PushBack(fArg)
+			match, _ := regexp.MatchString(".go$", fArg)
+			if match {
+				cList.PushBack(fArg)
+			}
+
 		}
 
 		if fArg == "--list" {
@@ -96,6 +104,14 @@ func doLint(listSlice []string) (err error) {
 
 	if err := installer.CheckExternalDependencies(); err != nil {
 		return err
+	}
+
+	// check if there are disabled tools in the configuration
+	for key := range config.GlobalConfig.Disabled {
+		log.Debug("CONFIG DISABLED:", key)
+		if config.GlobalConfig.Disabled[key] {
+			installer.DisabledTool[key] = true
+		}
 	}
 
 	dirList, pkag, err := parser.Parse(listSlice)
