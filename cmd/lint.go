@@ -50,6 +50,9 @@ var lintCmd = &cobra.Command{
 			log.SetLevel(log.DebugLevel)
 			log.Debug("verbose mode enabled")
 		}
+		if err := config.LoadConfig(); err != nil {
+			log.Fatal("error loading config:", err)
+		}
 		if err := doLint(parseListFromArgs()); err != nil {
 			log.Fatal("Lint found errors")
 		}

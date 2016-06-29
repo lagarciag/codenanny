@@ -15,16 +15,16 @@
  * under the License.
  */
 
-//installer does this blah blah
-package dirlister_test
+//cmd does this blah blah
+package cmd_test
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/lagarciag/codenanny/dirlister"
+	"github.com/lagarciag/codenanny/cmd"
+	"github.com/lagarciag/codenanny/config"
 )
 
 func TestMain(t *testing.M) {
@@ -33,31 +33,23 @@ func TestMain(t *testing.M) {
 	formatter.ForceColors = true
 	formatter.DisableTimestamp = true
 	log.SetFormatter(&log.TextFormatter{})
-	log.SetFormatter(&log.TextFormatter{})
 	v := t.Run()
 	os.Exit(v)
 
 }
 
-func TestDirListerBasic(t *testing.T) {
-	rawGopath := os.Getenv("GOPATH")
-	splitGoPath := strings.Split(rawGopath, ":")
-	gopath := splitGoPath[len(splitGoPath)-1]
-	if err := os.Chdir(gopath + "/src/github.com/lagarciag/codenanny/"); err != nil {
-		t.Error("Could not change dir")
-	}
+func TestNanny(t *testing.T) {
+	log.Debug("TestNanny run")
+	conf := config.CodeNannyConfig{}
+	conf.IgnorePattern = make(map[string][]string)
 
-	t.Log("TestDirLister run")
+	conf.IgnorePattern["errcheck"] = []string{
+		"lint_test.go:.+:.+CreateUnCheckedError",
+		"packagewitherrors.go:.+:.+returnError"}
+	conf.IgnorePath = "dirtoexclude"
 
-	dirListSlice, dirListString, err := dirlister.ListDir("./")
-
-	if err != nil {
-		t.Error("Dir list error:", err.Error())
+	if err := cmd.DoLintForTesting(conf); err != nil {
+		t.Error(err)
 	}
-	if len(dirListSlice) != 19 {
-		t.Error("List size should be 19, but it is:", len(dirListSlice))
-	}
-	t.Log("dirList:", dirListSlice)
-	t.Log("dirString:", dirListString)
 
 }
