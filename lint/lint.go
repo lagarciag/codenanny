@@ -163,10 +163,10 @@ func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err er
 		}
 		if !match && aLine != "" {
 			errList.PushBack(aLine)
-			log.Errorf("%s:%s",tool,aLine)
+			log.Errorf("%s:%s", tool, aLine)
 		} else {
 			if aLine != "" {
-				log.Warnf("%s:%s",tool,aLine)
+				log.Warnf("%s:%s", tool, aLine)
 			}
 		}
 		match = false
