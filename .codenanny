@@ -1,0 +1,5 @@
+disabled: "tbd"
+ignore_pattern:
+               golint: []
+               errcheck: ["lint_test.go:.+:.+CreateUnCheckedError"]
+

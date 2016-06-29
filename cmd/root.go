@@ -46,6 +46,7 @@ var RootCmd = &cobra.Command{
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+
 	if err := RootCmd.Execute(); err != nil {
 		log.Error(err)
 		os.Exit(-1)
@@ -54,6 +55,7 @@ func Execute() {
 		log.SetLevel(log.DebugLevel)
 		log.Debug("verbose mode enabled")
 	}
+
 }
 
 func init() {

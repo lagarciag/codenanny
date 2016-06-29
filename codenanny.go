@@ -21,10 +21,10 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"os"
-	"github.com/lagarciag/codenanny/cmd"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/cmd"
 )
 
 func main() {

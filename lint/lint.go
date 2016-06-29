@@ -24,7 +24,15 @@ import (
 	"os/exec"
 	"strings"
 
+	"bytes"
+
+	"bufio"
+	"container/list"
+	"io"
+	"regexp"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/installer"
 )
 
@@ -96,9 +104,16 @@ func CheckPackages(listOfPackages []string) (err error) {
 				cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
 				out, err := cmd.CombinedOutput()
 				if err != nil {
-					errCount++
-					tmpErr = fmt.Errorf("%s found error in:\n%s", linter, string(out))
-					log.Error(tmpErr)
+					//Check patterns here
+					errList, _ := readErrorsFromChecker(out, linter)
+					if len(errList) > 0 {
+						errCount++
+						tmpErr = fmt.Errorf("%s found errors", linter)
+						log.Error(tmpErr)
+					} else {
+						log.Warnf("%s found Errors but an error ingnore matched", linter)
+						err = nil
+					}
 				}
 			} else {
 				log.Warn("Could not run disabled tool:", linter)
@@ -106,9 +121,65 @@ func CheckPackages(listOfPackages []string) (err error) {
 		}
 	}
 	if tmpErr != nil {
-		err = fmt.Errorf("Founf %d package linter errors", errCount)
+		err = fmt.Errorf("Found %d package linter errors", errCount)
 	}
 	return err
+}
+
+func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err error) {
+	var errEOF error
+	var aLine string
+	var pattern string
+	var match = false
+	patterns := config.GlobalConfig.IgnorePattern.Patterns
+	log.Debug("READERRORS...")
+	log.Debug("TOOL", tool)
+
+	listOfPatterns, foundPattern := patterns[tool]
+	log.Debug("PATTERNS", listOfPatterns)
+	if foundPattern {
+		log.Debug("Found patterns for tool:", tool)
+		log.Debug("Found patterns for tool:", listOfPatterns)
+		for patID, pat := range listOfPatterns {
+			if patID == 0 {
+				pattern = pat
+			} else {
+				pattern = fmt.Sprintf("%s|%s", pattern, pat)
+			}
+		}
+		log.Debug("Pattern to exclude:", pattern)
+	}
+
+	errList := list.New()
+	aReader := bytes.NewReader(cherrs)
+	r1 := bufio.NewReader(aReader)
+	for errEOF != io.EOF {
+		aLine, errEOF = r1.ReadString(10) //  line was defined before
+		aLine = strings.Trim(aLine, "\n")
+		if foundPattern {
+			match, _ = regexp.MatchString(pattern, aLine)
+			if match {
+				log.Debug("------>>>> MATCH:", aLine)
+				log.Debug("------>>>> PATTERN:", pattern)
+			}
+		}
+		if !match && aLine != "" {
+			errList.PushBack(aLine)
+			log.Error(aLine)
+		} else {
+			if aLine != "" {
+				log.Warn(aLine)
+			}
+		}
+		match = false
+	}
+	retList = make([]string, errList.Len())
+	count := 0
+	for e := errList.Front(); e != nil; e = e.Next() {
+		retList[count] = e.Value.(string)
+		count++
+	}
+	return retList, err
 }
 
 //CheckDirs runs linters and checkers on directories provided in listOfDirs

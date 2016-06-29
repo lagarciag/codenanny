@@ -24,6 +24,7 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/dirlister"
 	"github.com/spf13/cobra"
 )
@@ -42,6 +43,13 @@ var lintdirCmd = &cobra.Command{
 			log.SetLevel(log.DebugLevel)
 			log.Debug("verbose mode enabled")
 		}
+		if pathFlag == "" {
+			log.Fatal("you must define the --path flag for lintdir command")
+		}
+
+		if err := config.LoadConfig(); err != nil {
+			log.Fatal("error loading config:", err)
+		}
 
 		if err := lintdir(pathFlag); err != nil {
 			log.Fatal("Lint dir found errors")
@@ -53,17 +61,18 @@ var lintdirCmd = &cobra.Command{
 func lintdir(path string) (err error) {
 	fileSlice, _, err := dirlister.ListDir(path)
 
+	for _, dir := range fileSlice {
+		log.Debug("DIR:", dir)
+	}
+
 	if err != nil {
 		return err
 	}
-
-	log.Debug("The list:", fileSlice)
 	err = doLint(fileSlice)
 	return err
 }
 
 func init() {
 	RootCmd.AddCommand(lintdirCmd)
-	//RootCmd.PersistentFlags().StringVar(&path, "path", "p", "path to lint")
 	lintdirCmd.PersistentFlags().StringVarP(&pathFlag, "path", "p", "./", "path to lint")
 }

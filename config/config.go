@@ -15,10 +15,80 @@
  * under the License.
  */
 
-//config does this blah blah
+//Package config encapsulates configuration functionality for codenanny
 package config
 
+import (
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+)
+
+//GlobalConfig holds configuration functionality for Codennay
+var GlobalConfig CodeNannyConfig
+
+//CodeNannyConfig is the struct used to marshall in the configuration
+type CodeNannyConfig struct {
+	Disabled      string    `yaml:"disabled"`
+	IgnorePattern IgnorePat `yaml:"ignore_pattern"`
+}
+
+//IgnorePat is hols the lists of error ignores for each checker
+type IgnorePat struct {
+	Golint   []string `yaml:"golint"`
+	ErrCheck []string `yaml:"errcheck"`
+	Asdf     []string `yaml:"asdf"`
+	Patterns map[string][]string
+}
+
+//LoadConfig loads and processes the configuration file
 func LoadConfig() (err error) {
+	var yamlFile []byte
+
+	//Find out what the Root Path is
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	tmpRootPath, err := cmd.Output()
+	if err != nil {
+		log.Errorf("Is this a git repo???:%s", err.Error())
+		return err
+	}
+
+	//Trim return character
+	rootPath := strings.TrimSpace(string(tmpRootPath))
+	err = os.Chdir(rootPath)
+	if err != nil {
+		return err
+	}
+
+	configFile := rootPath + "/.codenanny"
+	if _, err := os.Stat(configFile); err == nil {
+		log.Debug("Found Config file")
+		yamlFile, err = ioutil.ReadFile(configFile)
+		if err != nil {
+			panic("Could not load file")
+		}
+		//Unmarshal yaml file into allocated go struct
+		if err := yaml.Unmarshal(yamlFile, &GlobalConfig); err != nil {
+			return err
+		}
+		GlobalConfig.IgnorePattern.Patterns = make(map[string][]string)
+
+		if GlobalConfig.IgnorePattern.Golint != nil {
+			log.Debug("Configuring patters for golint:", GlobalConfig.IgnorePattern.Golint)
+			GlobalConfig.IgnorePattern.Patterns["golint"] = GlobalConfig.IgnorePattern.Golint
+		}
+		if GlobalConfig.IgnorePattern.ErrCheck != nil {
+			GlobalConfig.IgnorePattern.Patterns["errcheck"] = GlobalConfig.IgnorePattern.Golint
+		}
+
+		log.Debug(GlobalConfig)
+	} else {
+		log.Debug("No config file cound in:", configFile)
+	}
 
 	return nil
 }

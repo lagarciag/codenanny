@@ -57,7 +57,7 @@ func CheckExternalDependencies() (err error) {
 
 	for key := range installMap {
 		packageToGet := installMap[key]
-		log.Debug("checking installation:", packageToGet)
+		//log.Debug("checking installation:", packageToGet)
 		_, err := exec.LookPath(key)
 
 		if err != nil {
@@ -108,7 +108,7 @@ func CheckExternalDependencies() (err error) {
 			}
 
 		}
-		log.Debug("Already installed:", key)
+		//log.Debug("Already installed:", key)
 	}
 	return err
 
