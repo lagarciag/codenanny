@@ -26,6 +26,8 @@ import (
 
 	"regexp"
 
+	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/installer"
@@ -99,6 +101,9 @@ func parseListFromArgs() (listSlice []string) {
 }
 
 func doLint(listSlice []string) (err error) {
+	var singPkgErr error
+	var multiPkgErr error
+	var dirCheckErr error
 
 	listSlice, _ = filterList(listSlice)
 
@@ -124,18 +129,29 @@ func doLint(listSlice []string) (err error) {
 		return err
 	}
 
-	err = lint.CheckPackages(pkag)
+	err = lint.CheckMultiPackages(pkag)
 
 	if err != nil {
-		log.Error("Lint packages failed:", err)
-		return err
+		multiPkgErr = fmt.Errorf("Lint multi packages failed:%s", err.Error())
+		log.Error(multiPkgErr.Error())
+	}
+
+	err = lint.CheckSinglePackages(pkag)
+
+	if err != nil {
+		singPkgErr = fmt.Errorf("Lint single packages failed:%s", err.Error())
+		log.Error(singPkgErr.Error())
 	}
 
 	err = lint.CheckDirs(dirList)
 
 	if err != nil {
-		log.Error("Lint dirs failed")
-		return err
+		dirCheckErr = fmt.Errorf("Lint dirs failed,%s", err.Error())
+		log.Error(dirCheckErr.Error())
+	}
+
+	if multiPkgErr != nil || singPkgErr != nil || dirCheckErr != nil {
+		err = fmt.Errorf("Linters failed:%s", "")
 	}
 
 	return err

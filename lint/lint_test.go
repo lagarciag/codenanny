@@ -23,7 +23,8 @@ func TestLintBasic(t *testing.T) {
 	if err := installer.CheckExternalDependencies(); err != nil {
 		t.Error(err)
 	}
-	var1 := "parser/parser.go"
+
+	var1 := "packagewitherrors/packagewitherrors.go"
 	var2 := "parser/parser_test.go"
 	var3 := "cmd/root.go"
 	var4 := "lint/lint.go"
@@ -34,11 +35,11 @@ func TestLintBasic(t *testing.T) {
 		t.Error("Error:", err)
 	}
 
-	if len(pkag) != 3 {
-		t.Error("List of packages must be 3")
+	if len(pkag) != 4 {
+		t.Error("List of packages must be 4", pkag)
 	}
-	if len(dirList) != 3 {
-		t.Error("List of dir must be 3")
+	if len(dirList) != 4 {
+		t.Error("List of dir must be 4", pkag)
 	}
 
 	t.Log("PKGs:", pkag)
@@ -46,10 +47,22 @@ func TestLintBasic(t *testing.T) {
 
 	CreateUnCheckedError()
 
-	err = lint.CheckPackages(pkag)
+	errCount := 0
+
+	err = lint.CheckSinglePackages(pkag)
 
 	if err == nil {
-		t.Error("At least 1 error should have been detected")
+		errCount++
+	}
+
+	err = lint.CheckMultiPackages(pkag)
+
+	if err == nil {
+		errCount++
+	}
+
+	if errCount == 0 {
+		t.Error("Should have detected errors")
 	}
 
 	err = lint.CheckDirs(dirList)

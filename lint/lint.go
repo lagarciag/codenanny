@@ -40,7 +40,7 @@ var lintersFlag = map[string]string{
 	"aligncheck":  `aligncheck .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$`,
 	"deadcode":    `deadcode  `,
 	"dupl":        `dupl -plumbing -threshold {duplthreshold} ./*.go:^(?P<path>[^\s][^:]+?\.go):(?P<line>\d+)-\d+:\s*(?P<message>.*)$`,
-	"errcheck":    `errcheck -abspath`,
+	"errcheck":    `errcheck `,
 	"goconst":     `goconst`,
 	"gocyclo":     `gocyclo -over {mincyclo} .:^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>[^:]+):(?P<line>\d+):(\d+)$`,
 	"gofmt":       `gofmt -l -s ./*.go:^(?P<path>[^\n]+)$`,
@@ -62,22 +62,104 @@ var lintersFlag = map[string]string{
 	"misspell":    "misspell ./*.go:PATH:LINE:COL:MESSAGE",
 }
 
-var packageLinters = []string{
-	"errcheck",
+var singlePackageLinters = []string{
 	"golint",
-	"vet",
-	"gosimple",
 	//	"unconvert",
 	//	"staticcheck",
 	//	"interfacer",
 }
+
+var multiPapackageLinter = []string{
+	"errcheck",
+	"vet",
+	"gosimple",
+}
+
 var dirLinters = []string{
 	"goimports",
 	"goconst",
 }
 
-//CheckPackages runs linters and code checkers in the passed list of packages
-func CheckPackages(listOfPackages []string) (err error) {
+//CheckMultiPackages runs linters and code checkers in the passed list of packages
+func CheckMultiPackages(listOfPackages []string) (err error) {
+	//Find out what the Root Path is
+	var tmpErr error
+	var errCount int
+	log.Debug("Checking pakages...", listOfPackages)
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	tmpRootPath, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	//Trim return character
+	rootPath := strings.TrimSpace(string(tmpRootPath))
+	err = os.Chdir(rootPath)
+	if err != nil {
+		return err
+	}
+	log.Debug("Root path is:", rootPath)
+
+	for _, linter := range multiPapackageLinter {
+		log.Debug("Running linter:", linter)
+		if !installer.DisabledTool[linter] {
+			log.Debug("Running package checker:", linter)
+			cmdString := lintersFlag[linter]
+			splitCmd := strings.Split(cmdString, " ")
+
+			cmdList := list.New()
+
+			//Create a linked list of the original command
+			for _, aCmd := range splitCmd {
+				cmdList.PushBack(aCmd)
+			}
+			//Add packages to the linked list
+			for _, aPackage := range listOfPackages {
+
+				cmdList.PushBack(aPackage)
+			}
+
+			//Convert the linked list into a string
+			argsList := make([]string, cmdList.Len())
+			count := 0
+			for e := cmdList.Front(); e != nil; e = e.Next() {
+				argsList[count] = e.Value.(string)
+				count++
+
+			}
+
+			msg := fmt.Sprintf("LINTER CMD: %s %v", splitCmd[0], argsList)
+			log.Debug(msg)
+			cmd := exec.Command(splitCmd[0], splitCmd[1])
+			cmd.Args = argsList
+
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				//Check patterns here
+				errList, _ := readErrorsFromChecker(out, linter)
+				if len(errList) > 0 {
+					errCount++
+					tmpErr = fmt.Errorf("%s found errors", linter)
+					log.Error(tmpErr)
+				} else {
+					log.Warnf("%s found Errors but an error ingnore matched", linter)
+					err = nil
+				}
+			}
+		} else {
+			log.Warn("Could not run disabled tool:", linter)
+		}
+
+	}
+
+	if tmpErr != nil {
+		err = fmt.Errorf("Found %d package linter errors", errCount)
+	}
+	return err
+}
+
+//CheckSinglePackages runs linters and code checkers in the passed list of packages
+func CheckSinglePackages(listOfPackages []string) (err error) {
 	//Find out what the Root Path is
 	var tmpErr error
 	var errCount int
@@ -97,7 +179,7 @@ func CheckPackages(listOfPackages []string) (err error) {
 	log.Debug("Root path is:", rootPath)
 	for _, aPackage := range listOfPackages {
 		log.Debug("Checking package:", aPackage)
-		for _, linter := range packageLinters {
+		for _, linter := range singlePackageLinters {
 			if !installer.DisabledTool[linter] {
 				log.Debug("Running package checker:", linter)
 				cmdString := lintersFlag[linter]
