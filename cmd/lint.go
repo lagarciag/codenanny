@@ -28,6 +28,8 @@ import (
 
 	"fmt"
 
+	"sync"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/installer"
@@ -129,26 +131,41 @@ func doLint(listSlice []string) (err error) {
 		return err
 	}
 
-	err = lint.CheckMultiPackages(pkag)
+	wg := &sync.WaitGroup{}
+	wg.Add(3)
 
-	if err != nil {
-		multiPkgErr = fmt.Errorf("Lint multi packages failed:%s", err.Error())
-		log.Error(multiPkgErr.Error())
+	multiPackages := func() {
+		err = lint.CheckMultiPackages(pkag)
+		if err != nil {
+			multiPkgErr = fmt.Errorf("Lint multi packages failed:%s", err.Error())
+			log.Error(multiPkgErr.Error())
+		}
+		wg.Done()
 	}
 
-	err = lint.CheckSinglePackages(pkag)
-
-	if err != nil {
-		singPkgErr = fmt.Errorf("Lint single packages failed:%s", err.Error())
-		log.Error(singPkgErr.Error())
+	singlePackages := func() {
+		err = lint.CheckSinglePackages(pkag)
+		if err != nil {
+			singPkgErr = fmt.Errorf("Lint single packages failed:%s", err.Error())
+			log.Error(singPkgErr.Error())
+		}
+		wg.Done()
 	}
 
-	err = lint.CheckDirs(dirList)
-
-	if err != nil {
-		dirCheckErr = fmt.Errorf("Lint dirs failed,%s", err.Error())
-		log.Error(dirCheckErr.Error())
+	checkDirs := func() {
+		err = lint.CheckDirs(dirList)
+		if err != nil {
+			dirCheckErr = fmt.Errorf("Lint dirs failed,%s", err.Error())
+			log.Error(dirCheckErr.Error())
+		}
+		wg.Done()
 	}
+
+	go multiPackages()
+	go singlePackages()
+	go checkDirs()
+
+	wg.Wait()
 
 	if multiPkgErr != nil || singPkgErr != nil || dirCheckErr != nil {
 		err = fmt.Errorf("Linters failed:%s", "")
@@ -167,7 +184,7 @@ func filterList(listSlice []string) (newListSlice []string, err error) {
 		if !match {
 			tmpList.PushBack(file)
 		} else {
-			log.Warn("Ignore path matched:", file)
+			log.Debug("Ignore path matched:", file)
 		}
 	}
 	newListSlice = make([]string, tmpList.Len())
