@@ -3,6 +3,6 @@ disabled:
          interfacer: true
 ignore_pattern:
                errcheck: ["lint_test.go:.+:.+CreateUnCheckedError","packagewitherrors.go:.+:.+returnError","lint/lint_test.go:.+:.+ CreateUnCheckedError"]
-               vetshadow: ["lint.lint_test.go:.+: declaration of err shadows declaration"]
+               vetshadow: ["lint.lint_test.go:.+: declaration of"]
                gosimple: ["lint/lint_test.go:1.+:2: 'if err != nil { return err }; return err' can be simplified"]
 ignore_path_pattern: "dirtoexclude"		 

@@ -47,12 +47,6 @@ func TestNannyNoErrors(t *testing.T) {
 	if err := lint.ChgDirToGitRootPath(); err != nil {
 		t.Error("Chage dir to git root returned error")
 	}
-	//conf := config.CodeNannyConfig{}
-	//conf.IgnorePattern = make(map[string][]string)
-	//conf.IgnorePattern["errcheck"] = []string{
-	//	"lint_test.go:.+:.+CreateUnCheckedError",
-	//	"packagewitherrors.go:.+:.+returnError"}
-	//conf.IgnorePath = "dirtoexclude"
 
 	if err := cmd.DoLintForTesting(config.GlobalConfig); err != nil {
 		t.Error(err)

@@ -64,11 +64,9 @@ func ListDir(path string) (dirListSlice []string, dirListString string, err erro
 	dirListString = ""
 	count := 0
 	for e := dirList.Front(); e != nil; e = e.Next() {
-		log.Debug("File:", e.Value)
 		dirListSlice[count] = e.Value.(string)
 		dirListString = dirListString + e.Value.(string) + " "
 		count++
 	}
-	log.Debug("LISTER OUT:", dirListSlice)
 	return dirListSlice, dirListString, err
 }
