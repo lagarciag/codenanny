@@ -14,6 +14,10 @@ import (
 
 func TestMain(t *testing.M) {
 	log.SetLevel(log.DebugLevel)
+	formatter := &log.TextFormatter{}
+	formatter.ForceColors = true
+	formatter.DisableTimestamp = true
+	log.SetFormatter(formatter)
 	v := t.Run()
 	os.Exit(v)
 
