@@ -26,13 +26,19 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+
+	"strconv"
 )
+
+//Version holds the current version
+var Version = "0.0.2"
 
 //GlobalConfig holds configuration functionality for Codennay
 var GlobalConfig CodeNannyConfig
 
 //CodeNannyConfig is the struct used to marshall in the configuration
 type CodeNannyConfig struct {
+	Version       string              `yaml:"required_version"`
 	Disabled      map[string]bool     `yaml:"disabled"`
 	IgnorePattern map[string][]string `yaml:"ignore_pattern"`
 	IgnorePath    string              `yaml:"ignore_path_pattern"`
@@ -68,17 +74,10 @@ func LoadConfig() (err error) {
 		if err := yaml.Unmarshal(yamlFile, &GlobalConfig); err != nil {
 			return err
 		}
-
-		/*GlobalConfig.IgnorePattern.Patterns = make(map[string][]string)
-
-		if GlobalConfig.IgnorePattern.Golint != nil {
-			log.Debug("Configuring patters for golint:", GlobalConfig.IgnorePattern.Golint)
-			GlobalConfig.IgnorePattern.Patterns["golint"] = GlobalConfig.IgnorePattern.Golint
+		//Check Version
+		if err := CheckVersion(); err != nil {
+			return err
 		}
-		if GlobalConfig.IgnorePattern.ErrCheck != nil {
-			GlobalConfig.IgnorePattern.Patterns["errcheck"] = GlobalConfig.IgnorePattern.ErrCheck
-		}
-		*/
 
 		log.Debug(GlobalConfig)
 	} else {
@@ -86,4 +85,32 @@ func LoadConfig() (err error) {
 	}
 
 	return nil
+}
+
+func versionToInt(ver string) (verInt int, err error) {
+	slicedVersion := strings.Split(ver, ".")
+	concatVersion := slicedVersion[0] + slicedVersion[1] + slicedVersion[2]
+	verInt, err = strconv.Atoi(concatVersion)
+	return verInt, err
+}
+
+//CheckVersion checks that .codenanny required version matches the actual version
+func CheckVersion() (err error) {
+	if GlobalConfig.Version != "" {
+		requiredVersion, errV := versionToInt(GlobalConfig.Version)
+		if err != nil {
+			return errV
+		}
+		actualVersion, errV := versionToInt(Version)
+		if err != nil {
+			return errV
+		}
+		if requiredVersion > actualVersion {
+			//log.Errorf("The .codenanny file (configuration) says that codenanny version %s is required, but this is %s ",GlobalConfig.Version,Version)
+			log.Fatalf("The .codenanny file (configuration) says that codenanny version %s is required, but this is %s ", GlobalConfig.Version, Version)
+		}
+		log.Info("Required version:", requiredVersion)
+		log.Info("Actual version:", actualVersion)
+	}
+	return err
 }
