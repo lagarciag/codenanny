@@ -58,7 +58,7 @@ func CheckExternalDependencies() (err error) {
 	for key := range installMap {
 		packageToGet := installMap[key]
 		//log.Debug("checking installation:", packageToGet)
-		_, err := exec.LookPath(key)
+		_, err = exec.LookPath(key)
 
 		if err != nil {
 			log.Debug("Need to install:", packageToGet)
@@ -66,16 +66,16 @@ func CheckExternalDependencies() (err error) {
 			for attempt := 0; attempt < 5; attempt++ {
 
 				cmd := exec.Command("go", "get", packageToGet)
-				getOut, err := cmd.CombinedOutput()
+				getOut, errOut := cmd.CombinedOutput()
 
-				if err != nil {
+				if errOut != nil {
 					installErr = fmt.Errorf("installing %s attempt %d failed.  OUT: %s", packageToGet, attempt, string(getOut))
 					gopath := os.Getenv("GOPATH")
 					splitGoPath := strings.Split(gopath, ":")
 					for _, path := range splitGoPath {
 						log.Debug("PATH", path)
 						fullPackagePath := path + fmt.Sprintf("/%s", packageToGet)
-						if _, err := os.Stat(fullPackagePath); os.IsExist(err) {
+						if _, err = os.Stat(fullPackagePath); os.IsExist(err) {
 							rmErr := os.Remove(fullPackagePath)
 							log.Error("Could not remove:", rmErr)
 						}
@@ -95,7 +95,7 @@ func CheckExternalDependencies() (err error) {
 				log.Error(nErr)
 				DisabledTool[key] = true
 			} else {
-				if _, err := exec.LookPath(key); err != nil {
+				if _, err = exec.LookPath(key); err != nil {
 					nErr := fmt.Errorf("After installing %s, still can't find it:%s", key, err)
 					log.Error(nErr.Error())
 					DisabledTool[key] = true

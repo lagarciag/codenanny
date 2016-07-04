@@ -106,10 +106,11 @@ func doLint(listSlice []string) (err error) {
 	var singPkgErr error
 	var multiPkgErr error
 	var dirCheckErr error
+	var dirCheckRecErr error
 
 	listSlice, _ = filterList(listSlice)
 
-	if err := installer.CheckExternalDependencies(); err != nil {
+	if err = installer.CheckExternalDependencies(); err != nil {
 		return err
 	}
 
@@ -132,12 +133,12 @@ func doLint(listSlice []string) (err error) {
 	}
 
 	wg := &sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 
 	multiPackages := func() {
 		err = lint.CheckMultiPackages(pkag)
 		if err != nil {
-			multiPkgErr = fmt.Errorf("Lint multi packages failed:%s", err.Error())
+			multiPkgErr = fmt.Errorf("Multi packages checker failed:%s", err.Error())
 			log.Error(multiPkgErr.Error())
 		}
 		wg.Done()
@@ -146,16 +147,25 @@ func doLint(listSlice []string) (err error) {
 	singlePackages := func() {
 		err = lint.CheckSinglePackages(pkag)
 		if err != nil {
-			singPkgErr = fmt.Errorf("Lint single packages failed:%s", err.Error())
+			singPkgErr = fmt.Errorf("Single packages checker failed:%s", err.Error())
 			log.Error(singPkgErr.Error())
 		}
 		wg.Done()
 	}
 
-	checkDirs := func() {
-		err = lint.CheckDirs(dirList)
+	checkRecDirs := func() {
+		err = lint.CheckRecursiveDirs(dirList)
 		if err != nil {
-			dirCheckErr = fmt.Errorf("Lint dirs failed,%s", err.Error())
+			dirCheckRecErr = fmt.Errorf("Directory recursive checker failed:,%s", err.Error())
+			log.Error(dirCheckRecErr.Error())
+		}
+		wg.Done()
+	}
+
+	checkDirs := func() {
+		err = lint.CheckMultiDirs(dirList)
+		if err != nil {
+			dirCheckErr = fmt.Errorf("Single dir checker failed:,%s", err.Error())
 			log.Error(dirCheckErr.Error())
 		}
 		wg.Done()
@@ -163,11 +173,12 @@ func doLint(listSlice []string) (err error) {
 
 	go multiPackages()
 	go singlePackages()
+	go checkRecDirs()
 	go checkDirs()
 
 	wg.Wait()
 
-	if multiPkgErr != nil || singPkgErr != nil || dirCheckErr != nil {
+	if multiPkgErr != nil || singPkgErr != nil || dirCheckErr != nil || dirCheckRecErr != nil {
 		err = fmt.Errorf("Linters failed:%s", "")
 	}
 

@@ -25,6 +25,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/lagarciag/codenanny/cmd"
 	"github.com/lagarciag/codenanny/config"
+	"github.com/lagarciag/codenanny/lint"
 )
 
 func TestMain(t *testing.M) {
@@ -32,23 +33,28 @@ func TestMain(t *testing.M) {
 	formatter := &log.TextFormatter{}
 	formatter.ForceColors = true
 	formatter.DisableTimestamp = true
-	log.SetFormatter(&log.TextFormatter{})
+	log.SetFormatter(formatter)
 	v := t.Run()
 	os.Exit(v)
 
 }
 
-func TestNanny(t *testing.T) {
+func TestNannyNoErrors(t *testing.T) {
 	log.Debug("TestNanny run")
-	conf := config.CodeNannyConfig{}
-	conf.IgnorePattern = make(map[string][]string)
+	if err := config.LoadConfig(); err != nil {
+		t.Error("Error loading configuration")
+	}
+	if err := lint.ChgDirToGitRootPath(); err != nil {
+		t.Error("Chage dir to git root returned error")
+	}
+	//conf := config.CodeNannyConfig{}
+	//conf.IgnorePattern = make(map[string][]string)
+	//conf.IgnorePattern["errcheck"] = []string{
+	//	"lint_test.go:.+:.+CreateUnCheckedError",
+	//	"packagewitherrors.go:.+:.+returnError"}
+	//conf.IgnorePath = "dirtoexclude"
 
-	conf.IgnorePattern["errcheck"] = []string{
-		"lint_test.go:.+:.+CreateUnCheckedError",
-		"packagewitherrors.go:.+:.+returnError"}
-	conf.IgnorePath = "dirtoexclude"
-
-	if err := cmd.DoLintForTesting(conf); err != nil {
+	if err := cmd.DoLintForTesting(config.GlobalConfig); err != nil {
 		t.Error(err)
 	}
 

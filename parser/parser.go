@@ -25,7 +25,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -37,21 +36,26 @@ import (
 //Parse parses the provided list of modified files
 func Parse(stringList []string) (dir []string, pkag []string, err error) {
 
-	//Find out what the Root Path is
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	tmpRootPath, err := cmd.Output()
-	if err != nil {
-		return dir, pkag, err
-	}
+	/*
+		//Find out what the Root Path is
+		cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+		tmpRootPath, err := cmd.Output()
+		if err != nil {
+			return dir, pkag, err
+		}
 
-	//Trim return character
-	rootPath := strings.TrimSpace(string(tmpRootPath))
-	err = os.Chdir(rootPath)
-	if err != nil {
-		return dir, pkag, err
-	}
-	log.Debug("PARSE:", stringList)
+		//Trim return character
+		rootPath := strings.TrimSpace(string(tmpRootPath))
+		err = os.Chdir(rootPath)
+		if err != nil {
+			return dir, pkag, err
+		}
+	*/
+	//log.Debug("Parser:",stringList)
 	dir, err = getUniqueDirs(stringList)
+
+	log.Info("DIR to parse", dir)
+
 	pkag, err = getUniquePkgs(dir)
 
 	return dir, pkag, err

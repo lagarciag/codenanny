@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/dirlister"
@@ -38,7 +36,6 @@ var lintdirCmd = &cobra.Command{
 	Long:  `runs linters and code checkers on the provided dir using the -p flag`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		fmt.Println("lintdir called")
 		if verbose {
 			log.SetLevel(log.DebugLevel)
 			log.Debug("verbose mode enabled")

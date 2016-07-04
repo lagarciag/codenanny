@@ -19,12 +19,11 @@
 package lint
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
-
-	"bytes"
 
 	"bufio"
 	"container/list"
@@ -54,8 +53,8 @@ var lintersFlag = map[string]string{
 	"test":        `go test:^--- FAIL: .*$\s+(?P<path>[^:]+):(?P<line>\d+): (?P<message>.*)$`,
 	"testify":     `go test:Location:\s+(?P<path>[^:]+):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)`,
 	"varcheck":    `varcheck .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$`,
-	"vet":         "go vet ",
-	"vetshadow":   "go tool vet --shadow ./*.go:PATH:LINE:MESSAGE",
+	"vet":         `go vet`,
+	"vetshadow":   `go tool vet -shadow=true`,
 	"unconvert":   "unconvert -apply",
 	"gosimple":    "gosimple ",
 	"staticcheck": "staticcheck ",
@@ -75,9 +74,15 @@ var multiPapackageLinter = []string{
 	"gosimple",
 }
 
-var dirLinters = []string{
-	"goimports",
+var dirMultiLinters = []string{
+	//"goimports",
 	"goconst",
+}
+
+var dirRecurseiveLinters = []string{
+	//"goimports",
+	//"goconst",
+	"vetshadow",
 }
 
 //CheckMultiPackages runs linters and code checkers in the passed list of packages
@@ -133,8 +138,8 @@ func CheckMultiPackages(listOfPackages []string) (err error) {
 			cmd := exec.Command(splitCmd[0], splitCmd[1])
 			cmd.Args = argsList
 
-			out, err := cmd.CombinedOutput()
-			if err != nil {
+			out, errOut := cmd.CombinedOutput()
+			if errOut != nil {
 				//Check patterns here
 				errList, _ := readErrorsFromChecker(out, linter)
 				if len(errList) > 0 {
@@ -187,8 +192,8 @@ func CheckSinglePackages(listOfPackages []string) (err error) {
 				msg := fmt.Sprintf("CMD: %s %s %s", splitCmd[0], splitCmd[1], aPackage)
 				log.Debug(msg)
 				cmd := exec.Command(splitCmd[0], splitCmd[1], aPackage)
-				out, err := cmd.CombinedOutput()
-				if err != nil {
+				out, errOut := cmd.CombinedOutput()
+				if errOut != nil {
 					//Check patterns here
 					errList, _ := readErrorsFromChecker(out, linter)
 					if len(errList) > 0 {
@@ -221,8 +226,8 @@ func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err er
 	listOfPatterns, foundPattern := patterns[tool]
 	log.Debug("PATTERNS", listOfPatterns)
 	if foundPattern {
-		log.Debug("Found patterns for tool:", tool)
-		log.Debug("Found patterns for tool:", listOfPatterns)
+		//log.Info("Found patterns for tool:", tool)
+		//log.Info("Found patterns for tool:", listOfPatterns)
 		for patID, pat := range listOfPatterns {
 			if patID == 0 {
 				pattern = pat
@@ -265,78 +270,77 @@ func readErrorsFromChecker(cherrs []byte, tool string) (retList []string, err er
 	return retList, err
 }
 
-//CheckDirs runs linters and checkers on directories provided in listOfDirs
-func CheckDirs(listOfDirs []string) (err error) {
+//CheckMultiDirs runs linters and checkers on directories provided in listOfDirs
+func CheckMultiDirs(listOfDirs []string) (err error) {
 	var errCount int
 	var tmpErr error
-	//Find out what the Root Path is
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	tmpRootPath, err := cmd.Output()
-	if err != nil {
-		return err
-	}
 
-	//Trim return character
-	rootPath := strings.TrimSpace(string(tmpRootPath))
-	err = os.Chdir(rootPath)
-	if err != nil {
-		return err
-	}
+	//------------------------------
+	//change dir into git root path
+	//------------------------------
+	//if err = chgDirToGitRootPath();err != nil {
+	//	return err
+	//}
 
+	//------------------------------
+	// Iterate through each passed
+	// directory
+	//------------------------------
 	for _, aDir := range listOfDirs {
 		log.Debug("Checking dir:", aDir)
-		for _, linter := range dirLinters {
-			if !installer.DisabledTool[linter] {
-				log.Debug("Running dir checker:", linter)
-				cmdString := lintersFlag[linter]
+		//---------------------------------
+		// To each directory run a checker
+		//---------------------------------
+		for _, checker := range dirMultiLinters {
+			if !installer.DisabledTool[checker] {
+				var lCmd *exec.Cmd
+				log.Debug("Running dir checker:", checker)
+				cmdString := lintersFlag[checker]
 				splitCmd := strings.Split(cmdString, " ")
-				var msg string
-				var cmd *exec.Cmd
-				if len(splitCmd) == 2 {
-					msg = fmt.Sprintf("DIR CMD: %s %s %s", splitCmd[0], splitCmd[1], aDir)
-					log.Debug(msg)
-					cmd = exec.Command(splitCmd[0], splitCmd[1], aDir)
-				} else if len(splitCmd) == 1 {
-					msg = fmt.Sprintf("DIR CMD: %s %s ", splitCmd[0], aDir)
-					log.Debug(msg)
-					cmd = exec.Command(splitCmd[0], aDir)
-				} else if len(splitCmd) == 3 {
-					msg = fmt.Sprintf("DIR CMD: %s %s %s %s", splitCmd[0], splitCmd[1], splitCmd[2], aDir)
-					log.Debug(msg)
-					cmd = exec.Command(splitCmd[0], aDir)
-				} else if len(splitCmd) == 4 {
-					msg = fmt.Sprintf("DIR CMD: %s %s %s %s %s", splitCmd[0], splitCmd[1], splitCmd[2], splitCmd[3], aDir)
-					log.Debug(msg)
-					cmd = exec.Command(splitCmd[0], aDir)
-				} else {
-					log.Error("CMD:", splitCmd[0])
+				switch {
+				case len(splitCmd) == 1:
+					lCmd = exec.Command(splitCmd[0], aDir)
+				case len(splitCmd) == 2:
+					lCmd = exec.Command(splitCmd[0], splitCmd[1], aDir)
+				case len(splitCmd) == 3:
+					lCmd = exec.Command(splitCmd[0], splitCmd[1], splitCmd[2], aDir)
+				case len(splitCmd) == 4:
+					lCmd = exec.Command(splitCmd[0], splitCmd[1], splitCmd[2], splitCmd[3], aDir)
+				case len(splitCmd) == 5:
+					lCmd = exec.Command(splitCmd[0], splitCmd[1], splitCmd[2], splitCmd[3], splitCmd[4], aDir)
+				case len(splitCmd) == 0 || len(splitCmd) > 5:
+					log.Error("This command is not correctly handled", splitCmd[0])
 					log.Error("LENTH:", len(splitCmd))
 					log.Fatal("Handle this error")
 				}
 
-				out, err := cmd.CombinedOutput()
-				if err != nil {
-					//Check patterns here
-					errList, _ := readErrorsFromChecker(out, linter)
+				//---------------------------------------------
+				//                Execute command
+				//---------------------------------------------
+				out, errOut := lCmd.CombinedOutput()
+
+				//---------------------------------
+				// Handle errors, if there are any
+				//---------------------------------
+				if errOut != nil {
+					//-------------------------------------
+					// Iterate through erros and verify
+					// if any has an exclusion
+					//-------------------------------------
+
+					errList, _ := readErrorsFromChecker(out, checker)
 					if len(errList) > 0 {
 						errCount++
-						tmpErr = fmt.Errorf("%s found errors", linter)
+						tmpErr = fmt.Errorf("%s found errors", checker)
 						log.Error(tmpErr)
 					} else {
-						log.Warnf("%s found Errors but an error ingnore matched", linter)
+						log.Warnf("%s found Errors but an error ingnore matched", checker)
 						err = nil
 					}
 				}
-				/*
-					if err != nil {
-						log.Debug("args:", cmd.Args)
-						err = fmt.Errorf("%s found error in:%s", linter, string(out))
-						log.Error(err)
-						return err
-					}
-				*/
+
 			} else {
-				log.Warn("Could not run disabled tool:", linter)
+				log.Warn("Could not run disabled tool:", checker)
 			}
 
 		}
@@ -346,4 +350,105 @@ func CheckDirs(listOfDirs []string) (err error) {
 		err = fmt.Errorf("Found %d package linter errors", errCount)
 	}
 	return nil
+}
+
+//CheckRecursiveDirs runs linters and checkers on directories provided in listOfDirs
+func CheckRecursiveDirs(listOfDirs []string) (err error) {
+	var errCount int
+	var tmpErr error
+	var theDir string
+
+	log.Debug("List of Dirs:", listOfDirs)
+
+	if len(listOfDirs) == 0 {
+		log.Warn("CheckRecursiveDir List is empty")
+		return nil
+	}
+
+	if len(listOfDirs) == 1 {
+		theDir = listOfDirs[0]
+	} else {
+		theDir = "./"
+	}
+
+	//---------------------------------
+	// To each directory run a checker
+	//---------------------------------
+	for _, checker := range dirRecurseiveLinters {
+		if !installer.DisabledTool[checker] {
+			var lCmd *exec.Cmd
+			log.Debug("Running dir checker:", checker)
+			cmdString := lintersFlag[checker]
+			splitCmd := strings.Split(cmdString, " ")
+			switch {
+			case len(splitCmd) == 1:
+				lCmd = exec.Command(splitCmd[0], theDir)
+			case len(splitCmd) == 2:
+				lCmd = exec.Command(splitCmd[0], splitCmd[1], theDir)
+			case len(splitCmd) == 3:
+				lCmd = exec.Command(splitCmd[0], splitCmd[1], splitCmd[2], theDir)
+			case len(splitCmd) == 4:
+				lCmd = exec.Command(splitCmd[0], splitCmd[1], splitCmd[2], splitCmd[3], theDir)
+			case len(splitCmd) == 5:
+				lCmd = exec.Command(splitCmd[0], splitCmd[1], splitCmd[2], splitCmd[3], splitCmd[4], theDir)
+			case len(splitCmd) == 0 || len(splitCmd) > 5:
+				log.Error("This command is not correctly handled", splitCmd[0])
+				log.Error("LENTH:", len(splitCmd))
+				log.Fatal("Handle this error")
+			}
+
+			//---------------------------------------------
+			//                Execute command
+			//---------------------------------------------
+			out, errOut := lCmd.CombinedOutput()
+
+			//---------------------------------
+			// Handle errors, if there are any
+			//---------------------------------
+			if errOut != nil {
+				//-------------------------------------
+				// Iterate through erros and verify
+				// if any has an exclusion
+				//-------------------------------------
+				//log.Info("Errors found for checker:",checker)
+				errList, _ := readErrorsFromChecker(out, checker)
+				if len(errList) > 0 {
+					errCount++
+					tmpErr = fmt.Errorf("%s found errors", checker)
+					log.Error(tmpErr)
+				} else {
+					log.Warnf("%s found Errors but an error ingnore matched", checker)
+					err = nil
+				}
+			}
+
+		} else {
+			log.Warn("Could not run disabled tool:", checker)
+		}
+
+	}
+	if tmpErr != nil {
+		err = fmt.Errorf("Found %d package linter errors", errCount)
+	}
+	return nil
+}
+
+//ChgDirToGitRootPath chages current working dir to gits repo root
+func ChgDirToGitRootPath() (err error) {
+
+	//-------------------------------------
+	// Detect the git root path
+	//-------------------------------------
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	tmpRootPath, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	//-------------------------------------
+	// cd into the git root path
+	//-------------------------------------
+	rootPath := strings.TrimSpace(string(tmpRootPath))
+	err = os.Chdir(rootPath)
+	return err
 }

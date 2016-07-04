@@ -49,8 +49,6 @@ func DoLintForTesting(conf config.CodeNannyConfig) (err error) {
 		return err
 	}
 	log.Debug("Dolint for testing...")
-	if err := Lintdir("./"); err != nil {
-		return err
-	}
+	err = Lintdir("./")
 	return err
 }
