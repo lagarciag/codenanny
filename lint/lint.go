@@ -349,7 +349,7 @@ func CheckMultiDirs(listOfDirs []string) (err error) {
 	if tmpErr != nil {
 		err = fmt.Errorf("Found %d package linter errors", errCount)
 	}
-	return nil
+	return err
 }
 
 //CheckRecursiveDirs runs linters and checkers on directories provided in listOfDirs
@@ -430,7 +430,7 @@ func CheckRecursiveDirs(listOfDirs []string) (err error) {
 	if tmpErr != nil {
 		err = fmt.Errorf("Found %d package linter errors", errCount)
 	}
-	return nil
+	return err
 }
 
 //ChgDirToGitRootPath chages current working dir to gits repo root
