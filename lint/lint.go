@@ -30,7 +30,7 @@ import (
 	"io"
 	"regexp"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/installer"
 )

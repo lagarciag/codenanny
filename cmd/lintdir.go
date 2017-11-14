@@ -21,7 +21,7 @@
 package cmd
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/lagarciag/codenanny/config"
 	"github.com/lagarciag/codenanny/dirlister"
 	"github.com/spf13/cobra"

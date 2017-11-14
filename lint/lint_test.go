@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/lagarciag/codenanny/installer"
 	"github.com/lagarciag/codenanny/lint"
